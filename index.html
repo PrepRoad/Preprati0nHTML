@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Fundamentals — Interactive Quiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Roboto", -apple-system, "Segoe UI", Arial, sans-serif;
+            margin: 0;
+            background: #f2f6fb;
+            color: #111;
+        }
+
+        .quiz-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+        }
+
+        .quiz-container h1 {
+            text-align: center;
+            font-size: 26px;
+            letter-spacing: -0.4px;
+            margin: 10px 0 20px;
+        }
+
+        .quiz-container .timer {
+            font-weight: bold;
+            text-align: right;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .timer.danger {
+            color: red;
+        }
+
+        .quiz-container h2.question {
+            font-size: 20px;
+            background-color: #d0ecff;
+            padding: 18px;
+            border-radius: 8px;
+            font-weight: normal;
+            line-height: 1.6;
+            margin: 0 0 20px;
+        }
+
+        .question-number {
+            font-size: 15px;
+            margin-right: 12px;
+            background: #1d3557;
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 8px;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .quiz-container .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .quiz-container .option {
+            border: none;
+            padding: 22px 24px;
+            font-size: 17px;
+            background: yellow;
+            cursor: pointer;
+            border-radius: 6px;
+            text-align: left;
+            line-height: 1.4;
+            color: #222;
+            transition: filter .12s;
+            position: relative;
+        }
+
+        .quiz-container .option:hover:not(.disabled) {
+            filter: brightness(0.95);
+        }
+
+        .disabled {
+            pointer-events: none;
+            opacity: 0.75;
+        }
+
+        .option.correct {
+            background-color: #51e351;
+            color: #222;
+        }
+
+        .option.incorrect {
+            background: #e63946;
+            color: #fff;
+        }
+
+        /* ---------- correct-answer celebration ---------- */
+        .celebrate {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            transform: rotate(8deg);
+            background: #fff;
+            color: #1d3557;
+            border: 2.5px solid #f5b50a;
+            border-radius: 999px;
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing: 1px;
+            padding: 6px 12px;
+            box-shadow: 0 6px 18px rgba(45, 106, 79, .35);
+            animation: pop .5s cubic-bezier(.2, 1.6, .4, 1) forwards;
+            z-index: 5;
+            white-space: nowrap;
+        }
+        .celebrate .cracker-emoji { font-size: 18px; display: inline-block; animation: wiggle .6s ease-in-out infinite; }
+
+        @keyframes pop {
+            0%   { transform: rotate(8deg) scale(0); }
+            60%  { transform: rotate(-4deg) scale(1.3); }
+            100% { transform: rotate(8deg) scale(1); }
+        }
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50%      { transform: rotate(20deg) scale(1.25); }
+        }
+        .crackers {
+            position: absolute;
+            bottom: 8px;
+            right: 12px;
+            font-size: 20px;
+            letter-spacing: 3px;
+            animation: cracker 1s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 6;
+        }
+        @keyframes cracker {
+            0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+            50%  { transform: translateY(-14px) rotate(18deg) scale(1.2); opacity: .85; }
+            100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+        }
+        .confetti {
+            position: fixed;
+            top: -12px;
+            font-size: 18px;
+            pointer-events: none;
+            z-index: 1000;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(105vh) rotate(720deg); opacity: .2; }
+        }
+
+        .fib-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            max-width: 720px;
+        }
+
+        .fib-row input {
+            flex: 1;
+            border: none;
+            padding: 20px 22px;
+            font-size: 17px;
+            background: yellow;
+            border-radius: 6px;
+            outline: none;
+            font-family: inherit;
+            color: #222;
+        }
+
+        .fib-row input:focus {
+            outline: 3px solid #ffd700;
+        }
+
+        .fib-row input.correct {
+            background: #51e351;
+        }
+
+        .fib-row input.incorrect {
+            background: #e63946;
+            color: #fff;
+        }
+
+        .fib-row .fib-submit {
+            background: #222;
+            color: #fff;
+            border: none;
+            padding: 12px 26px;
+            font-size: 16px;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        .quiz-container .next-btn,
+        .quiz-result .retake-btn {
+            background: #222;
+            color: #fff;
+            border: none;
+            padding: 12px 32px;
+            font-size: 20px;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 3px;
+            cursor: pointer;
+            width: fit-content;
+            display: inline-block;
+        }
+
+        .quiz-container .next-btn {
+            margin: 0 auto;
+            display: block;
+        }
+
+        .nav-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .nav-row .next-btn {
+            flex: 1;
+            max-width: 300px;
+            width: auto;
+        }
+
+        .next-btn.prev {
+            background: #3a4a5a;
+        }
+
+        .next-btn.prev:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ---------- result page ---------- */
+        .quiz-result {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+            text-align: center;
+            color: #dd2e00;
+        }
+
+        .quiz-result h2 {
+            margin: 6px 0 0;
+            font-size: 26px;
+        }
+
+        .quiz-result h3 {
+            margin: 0;
+            color: #1d3557;
+            font-size: 20px;
+        }
+
+        .result-legend {
+            font-size: 14px;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            gap: 22px;
+            align-items: center;
+        }
+
+        .result-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .dot.g { background: #51e351; }
+        .dot.r { background: #e63946; }
+        .dot.w { background: #fff; border: 2px solid #aaa; }
+
+        .question-container {
+            text-align: left;
+            border: 1.5px solid #dddddd;
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: #fff;
+            color: #222;
+        }
+
+        .question-container.correct-item {
+            background: #2ecc40;
+            border: none;
+            color: #fff;
+        }
+
+        .question-container.incorrect-item {
+            background: #e63946;
+            border: none;
+            color: #fff;
+        }
+
+        .question-container .question {
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .question-container .qno {
+            background: #1d3557;
+            color: #fff;
+            padding: 3px 9px;
+            border-radius: 7px;
+            font-size: 13px;
+            margin-right: 8px;
+        }
+
+        .question-container.correct-item .user-answer,
+        .question-container.correct-item .correct-answer,
+        .question-container.incorrect-item .user-answer,
+        .question-container.incorrect-item .correct-answer {
+            color: #fff;
+        }
+
+        .question-container .user-answer,
+        .question-container .correct-answer {
+            font-size: 14px;
+        }
+
+        .user-answer.good {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .user-answer.bad {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .user-answer.muted {
+            color: #666;
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .correct-answer {
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .quiz-result .retake-btn {
+            margin: 10px auto;
+        }
+
+        footer {
+            text-align: center;
+            color: #7c8a99;
+            font-size: 12px;
+            padding-bottom: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .quiz-container .options {
+                grid-template-columns: 1fr;
+            }
+            .fib-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h1>Unit-1 & 2: HTML Fundamentals</h1>
+    <div class="timer">Time Left: 00:00</div>
+    <h2 class="question"></h2>
+    <div class="options"></div>
+    <div class="fib-row hidden" id="fibRow">
+        <input type="text" id="fibInput" placeholder="Type your answer here..." autocomplete="off">
+        <button class="fib-submit" id="fibSubmit">Check</button>
+    </div>
+    <div class="nav-row">
+        <button class="next-btn prev" id="prevBtn">Previous</button>
+        <button class="next-btn" id="nextBtn">Next</button>
+    </div>
+</div>
+
+<div class="quiz-result"></div>
+
+<footer>HTML Fundamentals — 400-question interactive bank (Chapters 1–13 + In-Depth)</footer>
+
+<script>
+const QUESTIONS = [
+{"n": 1, "t": "What is defined as the global physical network of networks?", "type": "mc", "opts": [{"l": "A", "t": "World Wide Web"}, {"l": "B", "t": "The Internet"}, {"l": "C", "t": "Hypertext Transfer Protocol"}, {"l": "D", "t": "Domain Name System"}], "ans": "B", "anst": "The Internet"},
+{"n": 2, "t": "The Internet links networks using which array of technologies?", "type": "mc", "opts": [{"l": "A", "t": "Electronic, wireless, and optical"}, {"l": "B", "t": "Magnetic and mechanical only"}, {"l": "C", "t": "Acoustic and manual relay"}, {"l": "D", "t": "Purely satellite-based protocols"}], "ans": "A", "anst": "Electronic, wireless, and optical"},
+{"n": 3, "t": "Which service running on the Internet is responsible for email transmission?", "type": "mc", "opts": [{"l": "A", "t": "FTP"}, {"l": "B", "t": "SMTP"}, {"l": "C", "t": "HTTP"}, {"l": "D", "t": "DNS"}], "ans": "B", "anst": "SMTP"},
+{"n": 4, "t": "What does the acronym FTP stand for?", "type": "mc", "opts": [{"l": "A", "t": "File Transfer Protocol"}, {"l": "B", "t": "Fast Transmission Protocol"}, {"l": "C", "t": "Format Text Process"}, {"l": "D", "t": "File Tracking Provider"}], "ans": "A", "anst": "File Transfer Protocol"},
+{"n": 5, "t": "What is the World Wide Web (WWW)?", "type": "mc", "opts": [{"l": "A", "t": "The physical cables connecting servers"}, {"l": "B", "t": "An operating system for servers"}, {"l": "C", "t": "A system of interconnected documents and resources linked by hyperlinks and URLs"}, {"l": "D", "t": "A private intranet for academic organizations"}], "ans": "C", "anst": "A system of interconnected documents and resources linked by hyperlinks and URLs"},
+{"n": 6, "t": "How are resources identified within the World Wide Web?", "type": "mc", "opts": [{"l": "A", "t": "MAC addresses"}, {"l": "B", "t": "Uniform Resource Locators (URLs)"}, {"l": "C", "t": "Port forward numbers"}, {"l": "D", "t": "File allocation tables"}], "ans": "B", "anst": "Uniform Resource Locators (URLs)"},
+{"n": 7, "t": "What software application is primarily used to access the World Wide Web?", "type": "mc", "opts": [{"l": "A", "t": "Web browser"}, {"l": "B", "t": "Text compiler"}, {"l": "C", "t": "Database engine"}, {"l": "D", "t": "Operating system kernel"}], "ans": "A", "anst": "Web browser"},
+{"n": 8, "t": "Which of the following is NOT an example of a web browser?", "type": "mc", "opts": [{"l": "A", "t": "Google Chrome"}, {"l": "B", "t": "Mozilla Firefox"}, {"l": "C", "t": "Apache HTTP Server"}, {"l": "D", "t": "Apple Safari"}], "ans": "C", "anst": "Apache HTTP Server"},
+{"n": 9, "t": "What are the three core technologies that form the modern web triad?", "type": "mc", "opts": [{"l": "A", "t": "Python, SQL, and C++"}, {"l": "B", "t": "HTML, CSS, and JavaScript"}, {"l": "C", "t": "HTTP, FTP, and SMTP"}, {"l": "D", "t": "XML, JSON, and PHP"}], "ans": "B", "anst": "HTML, CSS, and JavaScript"},
+{"n": 10, "t": "What is the primary role of HTML in the web triad?", "type": "mc", "opts": [{"l": "A", "t": "Behavior and interactivity"}, {"l": "B", "t": "Visual presentation and styling"}, {"l": "C", "t": "Structure and content layer"}, {"l": "D", "t": "Database persistence"}], "ans": "C", "anst": "Structure and content layer"},
+{"n": 11, "t": "What does the acronym HTML stand for?", "type": "mc", "opts": [{"l": "A", "t": "HyperText Markup Language"}, {"l": "B", "t": "High Transfer Machine Language"}, {"l": "C", "t": "Hyperlink Text Management Line"}, {"l": "D", "t": "Hyper Transfer Mode Language"}], "ans": "A", "anst": "HyperText Markup Language"},
+{"n": 12, "t": "Which layer of the web triad does CSS represent?", "type": "mc", "opts": [{"l": "A", "t": "Structural layer"}, {"l": "B", "t": "Presentation or style layer"}, {"l": "C", "t": "Behavioral layer"}, {"l": "D", "t": "Network transport layer"}], "ans": "B", "anst": "Presentation or style layer"},
+{"n": 13, "t": "What does CSS define on a webpage?", "type": "mc", "opts": [{"l": "A", "t": "How content looks (colors, fonts, layout, spacing)"}, {"l": "B", "t": "The semantic definition of headings"}, {"l": "C", "t": "Server-side routing rules"}, {"l": "D", "t": "Database queries"}], "ans": "A", "anst": "How content looks (colors, fonts, layout, spacing)"},
+{"n": 14, "t": "What layer of the web triad does JavaScript govern?", "type": "mc", "opts": [{"l": "A", "t": "Network protocol layer"}, {"l": "B", "t": "Data serialization layer"}, {"l": "C", "t": "Presentation layer"}, {"l": "D", "t": "Behavior or interactivity layer"}], "ans": "D", "anst": "Behavior or interactivity layer"},
+{"n": 15, "t": "What capability does JavaScript provide to a webpage?", "type": "mc", "opts": [{"l": "A", "t": "Allows the page to respond to user actions and change dynamically without reloading"}, {"l": "B", "t": "Transmits physical optical signals through glass fibers"}, {"l": "C", "t": "Connects the client physically to the local router"}, {"l": "D", "t": "Formats pure text files into PDF documents"}], "ans": "A", "anst": "Allows the page to respond to user actions and change dynamically without reloading"},
+{"n": 16, "t": "Why is understanding HTML considered the critical first step in web development?", "type": "mc", "opts": [{"l": "A", "t": "Because CSS can compile without any markup"}, {"l": "B", "t": "Because without a sound structure, CSS cannot style properly and JavaScript cannot manipulate effectively"}, {"l": "C", "t": "Because JavaScript replaces HTML completely during runtime"}, {"l": "D", "t": "Because browsers reject websites that have CSS without HTML"}], "ans": "B", "anst": "Because without a sound structure, CSS cannot style properly and JavaScript cannot manipulate effectively"},
+{"n": 17, "t": "Can CSS function effectively without a sound HTML structure?", "type": "mc", "opts": [{"l": "A", "t": "Yes, CSS generates its own structural tree"}, {"l": "B", "t": "No, styling requires structural elements to target"}, {"l": "C", "t": "Yes, if written using external stylesheets"}, {"l": "D", "t": "Only in older versions of HTML"}], "ans": "B", "anst": "No, styling requires structural elements to target"},
+{"n": 18, "t": "Are the terms \"Internet\" and \"World Wide Web\" interchangeable?", "type": "mc", "opts": [{"l": "A", "t": "Yes, they are synonymous"}, {"l": "B", "t": "No, the Web is one of many services running on the Internet infrastructure"}, {"l": "C", "t": "Yes, since the release of HTML5"}, {"l": "D", "t": "No, the Internet was built on top of the Web"}], "ans": "B", "anst": "No, the Web is one of many services running on the Internet infrastructure"},
+{"n": 19, "t": "Which technology in the triad specifies whether a piece of content is a heading, paragraph, or image?", "type": "mc", "opts": [{"l": "A", "t": "JavaScript"}, {"l": "B", "t": "CSS"}, {"l": "C", "t": "HTML"}, {"l": "D", "t": "HTTP"}], "ans": "C", "anst": "HTML"},
+{"n": 20, "t": "What is the main function of client-side web browsers like Chrome, Firefox, and Edge?", "type": "mc", "opts": [{"l": "A", "t": "Hosting backend databases"}, {"l": "B", "t": "Serving web pages to thousands of concurrent users"}, {"l": "C", "t": "Accessing and rendering web resources for users"}, {"l": "D", "t": "Assigning IP addresses to domain names"}], "ans": "C", "anst": "Accessing and rendering web resources for users"},
+{"n": 21, "t": "What fundamental architectural model defines information exchange on the web?", "type": "mc", "opts": [{"l": "A", "t": "Peer-to-Peer architecture"}, {"l": "B", "t": "Client-Server architecture"}, {"l": "C", "t": "Master-Worker model"}, {"l": "D", "t": "Model-View-Controller architecture"}], "ans": "B", "anst": "Client-Server architecture"},
+{"n": 22, "t": "In the client-server model, what is the \"client\"?", "type": "mc", "opts": [{"l": "A", "t": "The data center housing server blades"}, {"l": "B", "t": "The device or application making a request for information"}, {"l": "C", "t": "The ISP hosting broadband lines"}, {"l": "D", "t": "The backend SQL database"}], "ans": "B", "anst": "The device or application making a request for information"},
+{"n": 23, "t": "In the context of the web, what is almost always the client?", "type": "mc", "opts": [{"l": "A", "t": "The web browser"}, {"l": "B", "t": "The domain registrar"}, {"l": "C", "t": "The physical fiber switch"}, {"l": "D", "t": "The Apache web server"}], "ans": "A", "anst": "The web browser"},
+{"n": 24, "t": "What is the \"server\" in the client-server architecture?", "type": "mc", "opts": [{"l": "A", "t": "An application running on mobile devices to render HTML"}, {"l": "B", "t": "A computer that stores and serves website resources when requested"}, {"l": "C", "t": "A browser extension used for web caching"}, {"l": "D", "t": "The peripheral input device operated by the end user"}], "ans": "B", "anst": "A computer that stores and serves website resources when requested"},
+{"n": 25, "t": "What protocol governs the communication between client and server?", "type": "mc", "opts": [{"l": "A", "t": "SMTP"}, {"l": "B", "t": "FTP"}, {"l": "C", "t": "HTTP"}, {"l": "D", "t": "SSH"}], "ans": "C", "anst": "HTTP"},
+{"n": 26, "t": "What is the cyclic communication process between client and server called?", "type": "mc", "opts": [{"l": "A", "t": "Handshake loop"}, {"l": "B", "t": "Request-Response Cycle"}, {"l": "C", "t": "Compilation-Execution Cycle"}, {"l": "D", "t": "Fetch-Decode Cycle"}], "ans": "B", "anst": "Request-Response Cycle"},
+{"n": 27, "t": "What initiates the Request-Response Cycle?", "type": "mc", "opts": [{"l": "A", "t": "The server pushing updates without connection"}, {"l": "B", "t": "A user action such as typing a URL or clicking a link"}, {"l": "C", "t": "A DNS background refresh"}, {"l": "D", "t": "A browser shutting down"}], "ans": "B", "anst": "A user action such as typing a URL or clicking a link"},
+{"n": 28, "t": "Which component formulates the initial HTTP Request?", "type": "mc", "opts": [{"l": "A", "t": "The web server"}, {"l": "B", "t": "The database engine"}, {"l": "C", "t": "The browser (client)"}, {"l": "D", "t": "The DNS authoritative server"}], "ans": "C", "anst": "The browser (client)"},
+{"n": 29, "t": "What essential components are contained in an HTTP Request?", "type": "mc", "opts": [{"l": "A", "t": "Server IP address and database credentials"}, {"l": "B", "t": "Resource URL, request method (e.g., GET/POST), and metadata"}, {"l": "C", "t": "Compiled binary bytecode and machine instructions"}, {"l": "D", "t": "Complete rendered DOM tree"}], "ans": "B", "anst": "Resource URL, request method (e.g., GET/POST), and metadata"},
+{"n": 30, "t": "What HTTP method is typically used to retrieve data from a server?", "type": "mc", "opts": [{"l": "A", "t": "PUSH"}, {"l": "B", "t": "GET"}, {"l": "C", "t": "FETCH"}, {"l": "D", "t": "SEND"}], "ans": "B", "anst": "GET"},
+{"n": 31, "t": "What HTTP method is commonly used to send data such as form submissions?", "type": "mc", "opts": [{"l": "A", "t": "GET"}, {"l": "B", "t": "POST"}, {"l": "C", "t": "RETRIEVE"}, {"l": "D", "t": "PULL"}], "ans": "B", "anst": "POST"},
+{"n": 32, "t": "What system does the browser use to translate a domain name into a server's IP address?", "type": "mc", "opts": [{"l": "A", "t": "Domain Name System (DNS)"}, {"l": "B", "t": "Dynamic Host Control"}, {"l": "C", "t": "Address Resolution Protocol"}, {"l": "D", "t": "Universal Resource Identifier"}], "ans": "A", "anst": "Domain Name System (DNS)"},
+{"n": 33, "t": "What occurs during the \"Processing\" stage on the server?", "type": "mc", "opts": [{"l": "A", "t": "The browser compiles JavaScript"}, {"l": "B", "t": "The server interprets the request, locates static files, or executes code dynamically"}, {"l": "C", "t": "The client paints pixels to the screen"}, {"l": "D", "t": "The DNS maps IP addresses to local cache"}], "ans": "B", "anst": "The server interprets the request, locates static files, or executes code dynamically"},
+{"n": 34, "t": "Which of the following backend languages may execute server-side code to generate dynamic HTML?", "type": "mc", "opts": [{"l": "A", "t": "Node.js, Python, or PHP"}, {"l": "B", "t": "CSS3"}, {"l": "C", "t": "HTML5"}, {"l": "D", "t": "Canvas API"}], "ans": "A", "anst": "Node.js, Python, or PHP"},
+{"n": 35, "t": "What is formulated by the server once the requested resource is located or generated?", "type": "mc", "opts": [{"l": "A", "t": "An HTTP Request"}, {"l": "B", "t": "An HTTP Response"}, {"l": "C", "t": "A DNS Record"}, {"l": "D", "t": "A DOM Tree"}], "ans": "B", "anst": "An HTTP Response"},
+{"n": 36, "t": "What code is included in an HTTP Response to indicate the outcome of the request?", "type": "mc", "opts": [{"l": "A", "t": "Port number"}, {"l": "B", "t": "Status code"}, {"l": "C", "t": "MAC address"}, {"l": "D", "t": "Hash checksum"}], "ans": "B", "anst": "Status code"},
+{"n": 37, "t": "What does the HTTP status code \"200 OK\" signify?", "type": "mc", "opts": [{"l": "A", "t": "Resource moved permanently"}, {"l": "B", "t": "Client authentication failure"}, {"l": "C", "t": "Request was successful"}, {"l": "D", "t": "Resource was not found"}], "ans": "C", "anst": "Request was successful"},
+{"n": 38, "t": "What does the HTTP status code \"404 Not Found\" indicate?", "type": "mc", "opts": [{"l": "A", "t": "The server crashed internally"}, {"l": "B", "t": "The requested resource could not be located"}, {"l": "C", "t": "The client submitted malformed data"}, {"l": "D", "t": "The request was authorized successfully"}], "ans": "B", "anst": "The requested resource could not be located"},
+{"n": 39, "t": "What is the \"Response Body\" in an HTTP Response for a typical webpage request?", "type": "mc", "opts": [{"l": "A", "t": "The HTML document itself"}, {"l": "B", "t": "The browser cache log"}, {"l": "C", "t": "The router routing table"}, {"l": "D", "t": "The DNS IP lookup table"}], "ans": "A", "anst": "The HTML document itself"},
+{"n": 40, "t": "What is the internal tree representation created by the browser when parsing HTML?", "type": "mc", "opts": [{"l": "A", "t": "Abstract Syntax Map"}, {"l": "B", "t": "Document Object Model (DOM)"}, {"l": "C", "t": "Server-side Object Graph"}, {"l": "D", "t": "Cascading Rule Sheet"}], "ans": "B", "anst": "Document Object Model (DOM)"},
+{"n": 41, "t": "What does the browser do when it encounters links to external CSS and JavaScript while parsing HTML?", "type": "mc", "opts": [{"l": "A", "t": "Halts parsing permanently"}, {"l": "B", "t": "Makes subsequent HTTP requests for those files"}, {"l": "C", "t": "Deletes the DOM tree"}, {"l": "D", "t": "Converts the external files into plain text paragraphs"}], "ans": "B", "anst": "Makes subsequent HTTP requests for those files"},
+{"n": 42, "t": "What browser sub-system combines HTML, CSS, and JavaScript to display visual elements on screen?", "type": "mc", "opts": [{"l": "A", "t": "Storage engine"}, {"l": "B", "t": "Rendering engine"}, {"l": "C", "t": "Query engine"}, {"l": "D", "t": "Network proxy"}], "ans": "B", "anst": "Rendering engine"},
+{"n": 43, "t": "Which step directly follows server processing in the Request-Response cycle?", "type": "mc", "opts": [{"l": "A", "t": "DNS resolution"}, {"l": "B", "t": "Formulation of the HTTP Request"}, {"l": "C", "t": "Formulation and sending of the HTTP Response"}, {"l": "D", "t": "User entering a URL"}], "ans": "C", "anst": "Formulation and sending of the HTTP Response"},
+{"n": 44, "t": "Which part of the HTTP message contains metadata like browser type?", "type": "mc", "opts": [{"l": "A", "t": "Request headers"}, {"l": "B", "t": "Status code"}, {"l": "C", "t": "Response body"}, {"l": "D", "t": "DNS query"}], "ans": "A", "anst": "Request headers"},
+{"n": 45, "t": "The continuous cycle of navigation and interaction on the web relies on:", "type": "mc", "opts": [{"l": "A", "t": "One single persistent request made at computer boot"}, {"l": "B", "t": "Ongoing request, processing, response, and rendering cycles"}, {"l": "C", "t": "Local file manipulation without network transfer"}, {"l": "D", "t": "Purely client-side database emulation"}], "ans": "B", "anst": "Ongoing request, processing, response, and rendering cycles"},
+{"n": 46, "t": "When was the HTML5 specification officially finalized?", "type": "mc", "opts": [{"l": "A", "t": "1999"}, {"l": "B", "t": "2008"}, {"l": "C", "t": "2014"}, {"l": "D", "t": "2020"}], "ans": "C", "anst": "2014"},
+{"n": 47, "t": "What did older HTML versions like HTML 4.01 rely on for video and audio playback?", "type": "mc", "opts": [{"l": "A", "t": "Native `<video>` elements"}, {"l": "B", "t": "Third-party plugins like Flash"}, {"l": "C", "t": "WebAssembly modules"}, {"l": "D", "t": "CSS keyframe animations"}], "ans": "B", "anst": "Third-party plugins like Flash"},
+{"n": 48, "t": "Which native graphic APIs were introduced or standardized natively in HTML5?", "type": "mc", "opts": [{"l": "A", "t": "DirectX and OpenGL"}, {"l": "B", "t": "`<canvas>` and native `<svg>` support"}, {"l": "C", "t": "Silverlight and Shockwave"}, {"l": "D", "t": "WebGL 3D Studio"}], "ans": "B", "anst": "`<canvas>` and native `<svg>` support"},
+{"n": 49, "t": "What type of elements did HTML5 introduce to describe the meaning of content rather than just appearance?", "type": "mc", "opts": [{"l": "A", "t": "Stylistic elements"}, {"l": "B", "t": "Semantic elements"}, {"l": "C", "t": "Virtual elements"}, {"l": "D", "t": "Syntactic classes"}], "ans": "B", "anst": "Semantic elements"},
+{"n": 50, "t": "Which HTML5 feature allows web applications to operate even without an active internet connection?", "type": "mc", "opts": [{"l": "A", "t": "Offline capabilities via APIs such as service workers"}, {"l": "B", "t": "Built-in HTTP proxy servers"}, {"l": "C", "t": "Automatic DNS caching"}, {"l": "D", "t": "High-speed broadband compression"}], "ans": "A", "anst": "Offline capabilities via APIs such as service workers"},
+{"n": 51, "t": "What is meant by the phrase \"HTML5 is a living standard\"?", "type": "mc", "opts": [{"l": "A", "t": "It undergoes complete deprecation every five years"}, {"l": "B", "t": "It is continuously updated with new features rather than waiting for a big \"HTML6\" release"}, {"l": "C", "t": "It requires active human oversight to compile"}, {"l": "D", "t": "It is only compatible with living organisms"}], "ans": "B", "anst": "It is continuously updated with new features rather than waiting for a big \"HTML6\" release"},
+{"n": 52, "t": "What is the mandatory first line in any modern HTML5 document?", "type": "mc", "opts": [{"l": "A", "t": "`<html version=\"5.0\">`"}, {"l": "B", "t": "`<!DOCTYPE html>`"}, {"l": "C", "t": "`<?xml version=\"1.0\"?>`"}, {"l": "D", "t": "`<head doctype=\"html5\">`"}], "ans": "B", "anst": "`<!DOCTYPE html>`"},
+{"n": 53, "t": "What is the primary purpose of the `<!DOCTYPE html>` declaration?", "type": "mc", "opts": [{"l": "A", "t": "To import external CSS stylesheets"}, {"l": "B", "t": "To instruct the browser which HTML version is used and prevent \"Quirks Mode\""}, {"l": "C", "t": "To link to search engine scrapers"}, {"l": "D", "t": "To declare database connectivity"}], "ans": "B", "anst": "To instruct the browser which HTML version is used and prevent \"Quirks Mode\""},
+{"n": 54, "t": "What mode do browsers enter if `<!DOCTYPE html>` is omitted or malformed?", "type": "mc", "opts": [{"l": "A", "t": "Strict Mode"}, {"l": "B", "t": "Quirks Mode"}, {"l": "C", "t": "Standards Mode"}, {"l": "D", "t": "Headless Mode"}], "ans": "B", "anst": "Quirks Mode"},
+{"n": 55, "t": "What negative effect occurs when a browser runs in Quirks Mode?", "type": "mc", "opts": [{"l": "A", "t": "Modern CSS layouts break and visual rendering becomes unpredictable"}, {"l": "B", "t": "The computer's operating system crashes"}, {"l": "C", "t": "All text content is converted to binary numbers"}, {"l": "D", "t": "The browser refuses to open any network sockets"}], "ans": "A", "anst": "Modern CSS layouts break and visual rendering becomes unpredictable"},
+{"n": 56, "t": "What mode does `<!DOCTYPE html>` force the browser to adopt?", "type": "mc", "opts": [{"l": "A", "t": "Quirks Mode"}, {"l": "B", "t": "Standards Mode"}, {"l": "C", "t": "Compatibility Mode"}, {"l": "D", "t": "Safe Mode"}], "ans": "B", "anst": "Standards Mode"},
+{"n": 57, "t": "Which element is the root element of an HTML page?", "type": "mc", "opts": [{"l": "A", "t": "`<root>`"}, {"l": "B", "t": "`<html>`"}, {"l": "C", "t": "`<head>`"}, {"l": "D", "t": "`<body>`"}], "ans": "B", "anst": "`<html>`"},
+{"n": 58, "t": "What attribute is typically included in the root `<html>` tag to specify the natural language?", "type": "mc", "opts": [{"l": "A", "t": "`char`"}, {"l": "B", "t": "`lang`"}, {"l": "C", "t": "`charset`"}, {"l": "D", "t": "`dir`"}], "ans": "B", "anst": "`lang`"},
+{"n": 59, "t": "Why is declaring `lang=\"en\"` on `<html>` critical?", "type": "mc", "opts": [{"l": "A", "t": "It dictates computer clock synchronization"}, {"l": "B", "t": "It aids accessibility (screen readers) and search engine indexing"}, {"l": "C", "t": "It forces all text to automatically translate to English"}, {"l": "D", "t": "It encrypts network payloads"}], "ans": "B", "anst": "It aids accessibility (screen readers) and search engine indexing"},
+{"n": 60, "t": "What is the `<head>` element in an HTML document?", "type": "mc", "opts": [{"l": "A", "t": "A container for visible top headings"}, {"l": "B", "t": "A container for document metadata not displayed directly on the webpage"}, {"l": "C", "t": "The navigation header bar displayed across screens"}, {"l": "D", "t": "A required footer for copyright notices"}], "ans": "B", "anst": "A container for document metadata not displayed directly on the webpage"},
+{"n": 61, "t": "What does the `<meta charset=\"UTF-8\">` tag do?", "type": "mc", "opts": [{"l": "A", "t": "Sets the viewport width"}, {"l": "B", "t": "Declares the universal character encoding that supports almost all characters, symbols, and emojis"}, {"l": "C", "t": "Compresses image files"}, {"l": "D", "t": "Links external JavaScript files"}], "ans": "B", "anst": "Declares the universal character encoding that supports almost all characters, symbols, and emojis"},
+{"n": 62, "t": "What meta tag is fundamental for ensuring responsive web design across mobile devices?", "type": "mc", "opts": [{"l": "A", "t": "`<meta name=\"author\">`"}, {"l": "B", "t": "`<meta name=\"keywords\">`"}, {"l": "C", "t": "`<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">`"}, {"l": "D", "t": "`<meta http-equiv=\"refresh\">`"}], "ans": "C", "anst": "`<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">`"},
+{"n": 63, "t": "In the standard viewport meta tag, what does `width=device-width` specify?", "type": "mc", "opts": [{"l": "A", "t": "It sets the screen to desktop resolution"}, {"l": "B", "t": "It matches the page width to the screen width of the device in device-independent pixels"}, {"l": "C", "t": "It crops images outside the viewport"}, {"l": "D", "t": "It locks the screen orientation"}], "ans": "B", "anst": "It matches the page width to the screen width of the device in device-independent pixels"},
+{"n": 64, "t": "What is defined inside the `<title>` tag?", "type": "mc", "opts": [{"l": "A", "t": "The primary visible `<h1>` on the canvas"}, {"l": "B", "t": "The title shown in browser tabs, bookmarks, and search engine results"}, {"l": "C", "t": "The legal name of the website hosting company"}, {"l": "D", "t": "The file path on the physical hard drive"}], "ans": "B", "anst": "The title shown in browser tabs, bookmarks, and search engine results"},
+{"n": 65, "t": "Where do links to external CSS stylesheets and script declarations typically live?", "type": "mc", "opts": [{"l": "A", "t": "Inside `<title>`"}, {"l": "B", "t": "Inside `<head>`"}, {"l": "C", "t": "Inside `<footer>` only"}, {"l": "D", "t": "Outside the `<html>` root tag"}], "ans": "B", "anst": "Inside `<head>`"},
+{"n": 66, "t": "What does the `<body>` element contain?", "type": "mc", "opts": [{"l": "A", "t": "Exclusively metadata and server configuration"}, {"l": "B", "t": "All visible and interactive content rendered on the page"}, {"l": "C", "t": "Search engine index records"}, {"l": "D", "t": "The DOCTYPE declaration"}], "ans": "B", "anst": "All visible and interactive content rendered on the page"},
+{"n": 67, "t": "How many `<body>` elements are permitted per HTML document?", "type": "mc", "opts": [{"l": "A", "t": "Zero"}, {"l": "B", "t": "Exactly one"}, {"l": "C", "t": "As many as there are structural sections"}, {"l": "D", "t": "Two (one for mobile, one for desktop)"}], "ans": "B", "anst": "Exactly one"},
+{"n": 68, "t": "What are the two immediate direct child elements inside the `<html>` root tag?", "type": "mc", "opts": [{"l": "A", "t": "`<header>` and `<footer>`"}, {"l": "B", "t": "`<head>` and `<body>`"}, {"l": "C", "t": "`<title>` and `<main>`"}, {"l": "D", "t": "`<div>` and `<script>`"}], "ans": "B", "anst": "`<head>` and `<body>`"},
+{"n": 69, "t": "What happens if a webpage has invalid HTML skeleton structure?", "type": "mc", "opts": [{"l": "A", "t": "The server automatically reformats the physical files"}, {"l": "B", "t": "The browser parsing engine may display unexpected layouts and accessibility will suffer"}, {"l": "C", "t": "The computer shuts down its network adapter"}, {"l": "D", "t": "DNS servers blacklist the domain name"}], "ans": "B", "anst": "The browser parsing engine may display unexpected layouts and accessibility will suffer"},
+{"n": 70, "t": "Which element wraps all HTML metadata and document content?", "type": "mc", "opts": [{"l": "A", "t": "`<!DOCTYPE>`"}, {"l": "B", "t": "`<html>`"}, {"l": "C", "t": "`<body>`"}, {"l": "D", "t": "`<main>`"}], "ans": "B", "anst": "`<html>`"},
+{"n": 71, "t": "What is the fundamental syntax structure of a standard HTML element?", "type": "mc", "opts": [{"l": "A", "t": "`[tagname: attribute] Content [/tagname]`"}, {"l": "B", "t": "`<tagname attribute=\"value\">Content Goes Here</tagname>`"}, {"l": "C", "t": "`{tagname} Content {/tagname}`"}, {"l": "D", "t": "`<tagname = attribute> Content`"}], "ans": "B", "anst": "`<tagname attribute=\"value\">Content Goes Here</tagname>`"},
+{"n": 72, "t": "Where do attributes always appear in an HTML element?", "type": "mc", "opts": [{"l": "A", "t": "Inside the closing tag"}, {"l": "B", "t": "In the content area"}, {"l": "C", "t": "Inside the opening tag"}, {"l": "D", "t": "Outside the angle brackets"}], "ans": "C", "anst": "Inside the opening tag"},
+{"n": 73, "t": "What are HTML elements called that do not contain content or require closing tags?", "type": "mc", "opts": [{"l": "A", "t": "Non-semantic tags"}, {"l": "B", "t": "Self-closing or void elements"}, {"l": "C", "t": "Dynamic elements"}, {"l": "D", "t": "Fragment elements"}], "ans": "B", "anst": "Self-closing or void elements"},
+{"n": 74, "t": "Which of the following is an example of a void (self-closing) element?", "type": "mc", "opts": [{"l": "A", "t": "`<p>`"}, {"l": "B", "t": "`<img>`"}, {"l": "C", "t": "`<div>`"}, {"l": "D", "t": "`<h1>`"}], "ans": "B", "anst": "`<img>`"},
+{"n": 75, "t": "Which of the following is NOT a void element?", "type": "mc", "opts": [{"l": "A", "t": "`<br>`"}, {"l": "B", "t": "`<hr>`"}, {"l": "C", "t": "`<meta>`"}, {"l": "D", "t": "`<span>`"}], "ans": "D", "anst": "`<span>`"},
+{"n": 76, "t": "How do HTML attributes typically format their key and value?", "type": "mc", "opts": [{"l": "A", "t": "`name: value`"}, {"l": "B", "t": "`name=\"value\"`"}, {"l": "C", "t": "`name -> value`"}, {"l": "D", "t": "`[name=value]`"}], "ans": "B", "anst": "`name=\"value\"`"},
+{"n": 77, "t": "What is a \"global attribute\" in HTML?", "type": "mc", "opts": [{"l": "A", "t": "An attribute that can only be defined once in the entire World Wide Web"}, {"l": "B", "t": "An attribute that can be used on almost any HTML element"}, {"l": "C", "t": "An attribute used strictly by foreign language translation bots"}, {"l": "D", "t": "An attribute reserved exclusively for the `<html>` root tag"}], "ans": "B", "anst": "An attribute that can be used on almost any HTML element"},
+{"n": 78, "t": "What is the primary characteristic of the `id` global attribute?", "type": "mc", "opts": [{"l": "A", "t": "It must be shared across at least five elements"}, {"l": "B", "t": "It must be unique across the entire document"}, {"l": "C", "t": "It changes dynamically on page refresh"}, {"l": "D", "t": "It can only contain numeric digits"}], "ans": "B", "anst": "It must be unique across the entire document"},
+{"n": 79, "t": "For what purposes is the `id` attribute commonly used?", "type": "mc", "opts": [{"l": "A", "t": "Fragment identifiers, CSS styling, and JavaScript element selection"}, {"l": "B", "t": "Storing large database tables"}, {"l": "C", "t": "Generating bulleted lists"}, {"l": "D", "t": "Creating metadata for search crawlers"}], "ans": "A", "anst": "Fragment identifiers, CSS styling, and JavaScript element selection"},
+{"n": 80, "t": "What is the primary function of the `class` attribute?", "type": "mc", "opts": [{"l": "A", "t": "Assigning unique document identities"}, {"l": "B", "t": "Assigning one or more class names to group elements for CSS styling and JS selection"}, {"l": "C", "t": "Forcing elements to render as void tags"}, {"l": "D", "t": "Defining backend server routing"}], "ans": "B", "anst": "Assigning one or more class names to group elements for CSS styling and JS selection"},
+{"n": 81, "t": "Can multiple elements share the exact same `class` attribute value?", "type": "mc", "opts": [{"l": "A", "t": "No, class names must be unique"}, {"l": "B", "t": "Yes, multiple elements can share the same class"}, {"l": "C", "t": "Only if they are identical tag types"}, {"l": "D", "t": "Only within `<table>` elements"}], "ans": "B", "anst": "Yes, multiple elements can share the same class"},
+{"n": 82, "t": "What does the global `title` attribute provide when placed on an HTML element?", "type": "mc", "opts": [{"l": "A", "t": "The search engine document title"}, {"l": "B", "t": "Advisory information, typically displayed as a tooltip on hover"}, {"l": "C", "t": "An obligatory heading level"}, {"l": "D", "t": "The URL for hyperlink navigation"}], "ans": "B", "anst": "Advisory information, typically displayed as a tooltip on hover"},
+{"n": 83, "t": "What range of heading elements is available in HTML?", "type": "mc", "opts": [{"l": "A", "t": "`<h0>` to `<h5>`"}, {"l": "B", "t": "`<h1>` to `<h6>`"}, {"l": "C", "t": "`<h1>` to `<h3>`"}, {"l": "D", "t": "`<header1>` to `<header6>`"}], "ans": "B", "anst": "`<h1>` to `<h6>`"},
+{"n": 84, "t": "Which heading level represents the highest structural importance?", "type": "mc", "opts": [{"l": "A", "t": "`<h6>`"}, {"l": "B", "t": "`<h1>`"}, {"l": "C", "t": "`<h-top>`"}, {"l": "D", "t": "`<head>`"}], "ans": "B", "anst": "`<h1>`"},
+{"n": 85, "t": "What is the best practice regarding the use of headings?", "type": "mc", "opts": [{"l": "A", "t": "Use them purely to make text bold and big"}, {"l": "B", "t": "Outline content hierarchically, use one `<h1>` per page, and avoid skipping levels"}, {"l": "C", "t": "Use `<h6>` for the main title to save visual space"}, {"l": "D", "t": "Nest all headings inside a single `<p>` tag"}], "ans": "B", "anst": "Outline content hierarchically, use one `<h1>` per page, and avoid skipping levels"},
+{"n": 86, "t": "What element defines a fundamental block of text?", "type": "mc", "opts": [{"l": "A", "t": "`<span>`"}, {"l": "B", "t": "`<p>`"}, {"l": "C", "t": "`<text>`"}, {"l": "D", "t": "`<block>`"}], "ans": "B", "anst": "`<p>`"},
+{"n": 87, "t": "What default spacing behavior do web browsers exhibit around paragraphs?", "type": "mc", "opts": [{"l": "A", "t": "Add vertical space (margin) before and after each paragraph"}, {"l": "B", "t": "Indent every line by 50 pixels"}, {"l": "C", "t": "Display all paragraphs inline without line breaks"}, {"l": "D", "t": "Add a colored border around text"}], "ans": "A", "anst": "Add vertical space (margin) before and after each paragraph"},
+{"n": 88, "t": "What semantic meaning does the `<em>` element convey?", "type": "mc", "opts": [{"l": "A", "t": "Purely stylistic italic font"}, {"l": "B", "t": "Stress emphasis, indicating content intended to be spoken differently"}, {"l": "C", "t": "Deletion of text"}, {"l": "D", "t": "Mathematical exponentiation"}], "ans": "B", "anst": "Stress emphasis, indicating content intended to be spoken differently"},
+{"n": 89, "t": "How is the `<em>` element conventionally rendered by default?", "type": "mc", "opts": [{"l": "A", "t": "In bold"}, {"l": "B", "t": "In italics"}, {"l": "C", "t": "Underlined"}, {"l": "D", "t": "Strikethrough"}], "ans": "B", "anst": "In italics"},
+{"n": 90, "t": "How does the `<i>` element differ semantically from the `<em>` element?", "type": "mc", "opts": [{"l": "A", "t": "`<i>` has greater semantic emphasis than `<em>`"}, {"l": "B", "t": "`<i>` represents an alternate voice or technical term without strong stress emphasis"}, {"l": "C", "t": "`<i>` renders text in bold instead of italics"}, {"l": "D", "t": "`<i>` is deprecated and strictly forbidden in HTML5"}], "ans": "B", "anst": "`<i>` represents an alternate voice or technical term without strong stress emphasis"},
+{"n": 91, "t": "What semantic meaning is conveyed by the `<strong>` element?", "type": "mc", "opts": [{"l": "A", "t": "Visual bolding without seriousness"}, {"l": "B", "t": "Strong importance, seriousness, or urgency"}, {"l": "C", "t": "Computer code syntax"}, {"l": "D", "t": "External hyperlink destination"}], "ans": "B", "anst": "Strong importance, seriousness, or urgency"},
+{"n": 92, "t": "How is the `<strong>` element conventionally rendered by browsers?", "type": "mc", "opts": [{"l": "A", "t": "In italics"}, {"l": "B", "t": "In bold"}, {"l": "C", "t": "In red text"}, {"l": "D", "t": "With a dashed underline"}], "ans": "B", "anst": "In bold"},
+{"n": 93, "t": "What is the role of the `<b>` element compared to `<strong>`?", "type": "mc", "opts": [{"l": "A", "t": "`<b>` conveys extreme emergency"}, {"l": "B", "t": "`<b>` draws attention stylistically without conveying extra semantic importance"}, {"l": "C", "t": "`<b>` is converted into a blockquote automatically"}, {"l": "D", "t": "`<b>` is exclusively used for navigation menus"}], "ans": "B", "anst": "`<b>` draws attention stylistically without conveying extra semantic importance"},
+{"n": 94, "t": "Which element is designed for long, multi-line quotations?", "type": "mc", "opts": [{"l": "A", "t": "`<q>`"}, {"l": "B", "t": "`<blockquote>`"}, {"l": "C", "t": "`<cite>`"}, {"l": "D", "t": "`<quote>`"}], "ans": "B", "anst": "`<blockquote>`"},
+{"n": 95, "t": "How do browsers typically render a `<blockquote>` by default?", "type": "mc", "opts": [{"l": "A", "t": "With quotation marks and green text"}, {"l": "B", "t": "As an indented block-level element"}, {"l": "C", "t": "As inline text with strikethrough"}, {"l": "D", "t": "Hidden until hovered"}], "ans": "B", "anst": "As an indented block-level element"},
+{"n": 96, "t": "Which element is used for short, inline quotations?", "type": "mc", "opts": [{"l": "A", "t": "`<q>`"}, {"l": "B", "t": "`<blockquote>`"}, {"l": "C", "t": "`<inline-quote>`"}, {"l": "D", "t": "`<quote>`"}], "ans": "A", "anst": "`<q>`"},
+{"n": 97, "t": "What visual decoration do browsers automatically add around a `<q>` element?", "type": "mc", "opts": [{"l": "A", "t": "Parentheses"}, {"l": "B", "t": "Quotation marks"}, {"l": "C", "t": "Underlines"}, {"l": "D", "t": "Square brackets"}], "ans": "B", "anst": "Quotation marks"},
+{"n": 98, "t": "What does the `<br>` element do?", "type": "mc", "opts": [{"l": "A", "t": "Breaks the database connection"}, {"l": "B", "t": "Forces a single line break within text"}, {"l": "C", "t": "Creates a bullet point"}, {"l": "D", "t": "Bolds text inline"}], "ans": "B", "anst": "Forces a single line break within text"},
+{"n": 99, "t": "When is it appropriate to use the `<br>` element?", "type": "mc", "opts": [{"l": "A", "t": "To create large vertical white spaces between layout blocks"}, {"l": "B", "t": "When the line break is an intrinsic part of the content (e.g., poems, physical addresses)"}, {"l": "C", "t": "To wrap every single sentence in a paragraph"}, {"l": "D", "t": "To separate items in a navigation bar"}], "ans": "B", "anst": "When the line break is an intrinsic part of the content (e.g., poems, physical addresses)"},
+{"n": 100, "t": "What does the `<hr>` element semantically represent in HTML5?", "type": "mc", "opts": [{"l": "A", "t": "A hard reload of the page"}, {"l": "B", "t": "A thematic break between paragraph-level elements"}, {"l": "C", "t": "A high-resolution graphic placeholder"}, {"l": "D", "t": "An inline horizontal hyperlink"}], "ans": "B", "anst": "A thematic break between paragraph-level elements"},
+{"n": 101, "t": "How many distinct types of lists are provided in HTML?", "type": "mc", "opts": [{"l": "A", "t": "Two"}, {"l": "B", "t": "Three"}, {"l": "C", "t": "Five"}, {"l": "D", "t": "Six"}], "ans": "B", "anst": "Three"},
+{"n": 102, "t": "Which tag defines an unordered list?", "type": "mc", "opts": [{"l": "A", "t": "`<ol>`"}, {"l": "B", "t": "`<ul>`"}, {"l": "C", "t": "`<dl>`"}, {"l": "D", "t": "`<list>`"}], "ans": "B", "anst": "`<ul>`"},
+{"n": 103, "t": "When should an unordered list (`<ul>`) be used?", "type": "mc", "opts": [{"l": "A", "t": "When sequence and numerical ranking matter"}, {"l": "B", "t": "For collections of items where order does not matter"}, {"l": "C", "t": "Exclusively for dictionary glossaries"}, {"l": "D", "t": "For continuous legal contracts"}], "ans": "B", "anst": "For collections of items where order does not matter"},
+{"n": 104, "t": "Which element wraps each individual item within a `<ul>` or `<ol>`?", "type": "mc", "opts": [{"l": "A", "t": "`<item>`"}, {"l": "B", "t": "`<li>`"}, {"l": "C", "t": "`<dt>`"}, {"l": "D", "t": "`<ul>`"}], "ans": "B", "anst": "`<li>`"},
+{"n": 105, "t": "What is the default marker style used by browsers for `<ul>` items?", "type": "mc", "opts": [{"l": "A", "t": "Arabic numerals"}, {"l": "B", "t": "Bullets (solid discs)"}, {"l": "C", "t": "Roman numerals"}, {"l": "D", "t": "Alphabetical letters"}], "ans": "B", "anst": "Bullets (solid discs)"},
+{"n": 106, "t": "Which tag defines an ordered list?", "type": "mc", "opts": [{"l": "A", "t": "`<ul>`"}, {"l": "B", "t": "`<ol>`"}, {"l": "C", "t": "`<order>`"}, {"l": "D", "t": "`<dl>`"}], "ans": "B", "anst": "`<ol>`"},
+{"n": 107, "t": "When is an ordered list (`<ol>`) semantically appropriate?", "type": "mc", "opts": [{"l": "A", "t": "When items have an intentional sequence or ranking (e.g., recipes, steps)"}, {"l": "B", "t": "When displaying random keywords in a cloud"}, {"l": "C", "t": "When listing navigation links in a header"}, {"l": "D", "t": "When presenting pairs of terms and definitions"}], "ans": "A", "anst": "When items have an intentional sequence or ranking (e.g., recipes, steps)"},
+{"n": 108, "t": "What are two recognized attributes of the `<ol>` element?", "type": "mc", "opts": [{"l": "A", "t": "`href` and `src`"}, {"l": "B", "t": "`type` and `start`"}, {"l": "C", "t": "`alt` and `title`"}, {"l": "D", "t": "`cols` and `rows`"}], "ans": "B", "anst": "`type` and `start`"},
+{"n": 109, "t": "What does the `start` attribute on an `<ol>` specify?", "type": "mc", "opts": [{"l": "A", "t": "The duration of an animation"}, {"l": "B", "t": "The starting numeric value for list numbering"}, {"l": "C", "t": "The font size of the first item"}, {"l": "D", "t": "The CSS class to apply"}], "ans": "B", "anst": "The starting numeric value for list numbering"},
+{"n": 110, "t": "What does the `<dl>` element define?", "type": "mc", "opts": [{"l": "A", "t": "A direct list"}, {"l": "B", "t": "A description list"}, {"l": "C", "t": "A downloadable link"}, {"l": "D", "t": "A document line"}], "ans": "B", "anst": "A description list"},
+{"n": 111, "t": "Which child tag inside `<dl>` defines the term or item name?", "type": "mc", "opts": [{"l": "A", "t": "`<dd>`"}, {"l": "B", "t": "`<dt>`"}, {"l": "C", "t": "`<li>`"}, {"l": "D", "t": "`<term>`"}], "ans": "B", "anst": "`<dt>`"},
+{"n": 112, "t": "Which child tag inside `<dl>` defines the description or definition?", "type": "mc", "opts": [{"l": "A", "t": "`<dt>`"}, {"l": "B", "t": "`<dd>`"}, {"l": "C", "t": "`<desc>`"}, {"l": "D", "t": "`<def>`"}], "ans": "B", "anst": "`<dd>`"},
+{"n": 113, "t": "What is a primary use case for a description list (`<dl>`)?", "type": "mc", "opts": [{"l": "A", "t": "Multi-step cooking recipes"}, {"l": "B", "t": "Glossaries and key-value metadata configurations"}, {"l": "C", "t": "Top-level page headings"}, {"l": "D", "t": "Numeric item rankings"}], "ans": "B", "anst": "Glossaries and key-value metadata configurations"},
+{"n": 114, "t": "Which HTML element creates hyperlinks?", "type": "mc", "opts": [{"l": "A", "t": "`<link>`"}, {"l": "B", "t": "`<a>`"}, {"l": "C", "t": "`<href>`"}, {"l": "D", "t": "`<url>`"}], "ans": "B", "anst": "`<a>`"},
+{"n": 115, "t": "What does the `a` in the `<a>` tag stand for?", "type": "mc", "opts": [{"l": "A", "t": "Action"}, {"l": "B", "t": "Anchor"}, {"l": "C", "t": "Address"}, {"l": "D", "t": "Array"}], "ans": "B", "anst": "Anchor"},
+{"n": 116, "t": "Which attribute of the `<a>` tag specifies the destination link target?", "type": "mc", "opts": [{"l": "A", "t": "`src`"}, {"l": "B", "t": "`href`"}, {"l": "C", "t": "`target`"}, {"l": "D", "t": "`rel`"}], "ans": "B", "anst": "`href`"},
+{"n": 117, "t": "What type of URL begins with the protocol and domain name (e.g., `https://example.com`)?", "type": "mc", "opts": [{"l": "A", "t": "Relative URL"}, {"l": "B", "t": "Absolute URL"}, {"l": "C", "t": "Fragment URL"}, {"l": "D", "t": "File system protocol"}], "ans": "B", "anst": "Absolute URL"},
+{"n": 118, "t": "What does a link with `href=\"#section2\"` do when clicked?", "type": "mc", "opts": [{"l": "A", "t": "Downloads a file named section2"}, {"l": "B", "t": "Navigates to an element with `id=\"section2\"` on the current page"}, {"l": "C", "t": "Sends an email to section2"}, {"l": "D", "t": "Clears the current page session"}], "ans": "B", "anst": "Navigates to an element with `id=\"section2\"` on the current page"},
+{"n": 119, "t": "What protocol prefix is used in `href` to initiate an email message?", "type": "mc", "opts": [{"l": "A", "t": "`email://`"}, {"l": "B", "t": "`mailto:`"}, {"l": "C", "t": "`send:`"}, {"l": "D", "t": "`smtp:`"}], "ans": "B", "anst": "`mailto:`"},
+{"n": 120, "t": "What protocol prefix is used in `href` to launch phone dialers?", "type": "mc", "opts": [{"l": "A", "t": "`call:`"}, {"l": "B", "t": "`tel:`"}, {"l": "C", "t": "`phone:`"}, {"l": "D", "t": "`dial:`"}], "ans": "B", "anst": "`tel:`"},
+{"n": 121, "t": "What does the attribute `target=\"_blank\"` on an `<a>` element specify?", "type": "mc", "opts": [{"l": "A", "t": "Opens the linked document in the same frame/tab"}, {"l": "B", "t": "Opens the linked document in a new tab or window"}, {"l": "C", "t": "Downloads the document without opening"}, {"l": "D", "t": "Disables the link entirely"}], "ans": "B", "anst": "Opens the linked document in a new tab or window"},
+{"n": 122, "t": "What is the default value of the `target` attribute on anchor links?", "type": "mc", "opts": [{"l": "A", "t": "`_blank`"}, {"l": "B", "t": "`_self`"}, {"l": "C", "t": "`_parent`"}, {"l": "D", "t": "`_top`"}], "ans": "B", "anst": "`_self`"},
+{"n": 123, "t": "What element is used to embed images on a webpage?", "type": "mc", "opts": [{"l": "A", "t": "`<picture>` only"}, {"l": "B", "t": "`<img>`"}, {"l": "C", "t": "`<image>`"}, {"l": "D", "t": "`<graphic>`"}], "ans": "B", "anst": "`<img>`"},
+{"n": 124, "t": "Is the `<img>` element a container tag or a void tag?", "type": "mc", "opts": [{"l": "A", "t": "Container tag requiring `</img>`"}, {"l": "B", "t": "Void (self-closing) element"}, {"l": "C", "t": "Semantic block tag requiring header"}, {"l": "D", "t": "Form input tag"}], "ans": "B", "anst": "Void (self-closing) element"},
+{"n": 125, "t": "Which attribute specifies the source location or path of an image?", "type": "mc", "opts": [{"l": "A", "t": "`href`"}, {"l": "B", "t": "`src`"}, {"l": "C", "t": "`url`"}, {"l": "D", "t": "`path`"}], "ans": "B", "anst": "`src`"},
+{"n": 126, "t": "What is the purpose of the `alt` attribute on an `<img>` tag?", "type": "mc", "opts": [{"l": "A", "t": "Sets an alternative tooltip font"}, {"l": "B", "t": "Provides alternative text read by screen readers and displayed if the image fails to load"}, {"l": "C", "t": "Alters image color balance"}, {"l": "D", "t": "Animates the image on hover"}], "ans": "B", "anst": "Provides alternative text read by screen readers and displayed if the image fails to load"},
+{"n": 127, "t": "For purely decorative images that convey no information, what should the `alt` attribute contain?", "type": "mc", "opts": [{"l": "A", "t": "`alt=\"decorative image\"`"}, {"l": "B", "t": "`alt=\"\"` (empty string)"}, {"l": "C", "t": "Omit the `alt` attribute entirely"}, {"l": "D", "t": "`alt=\"none\"`"}], "ans": "B", "anst": "`alt=\"\"` (empty string)"},
+{"n": 128, "t": "Why is omitting the `alt` attribute completely bad for accessibility?", "type": "mc", "opts": [{"l": "A", "t": "Browsers crash upon loading"}, {"l": "B", "t": "Screen readers may read out the entire raw image file URL to blind users"}, {"l": "C", "t": "Images load upside down"}, {"l": "D", "t": "CSS cannot apply border styles"}], "ans": "B", "anst": "Screen readers may read out the entire raw image file URL to blind users"},
+{"n": 129, "t": "What advantage does specifying `width` and `height` attributes on `<img>` provide?", "type": "mc", "opts": [{"l": "A", "t": "It forces the browser to compress image bytes"}, {"l": "B", "t": "It allows the browser to allocate space beforehand, preventing layout shifts"}, {"l": "C", "t": "It increases the image pixel resolution"}, {"l": "D", "t": "It converts raster formats into SVG"}], "ans": "B", "anst": "It allows the browser to allocate space beforehand, preventing layout shifts"},
+{"n": 130, "t": "What term describes unexpected page jumps caused by images loading without defined dimensions?", "type": "mc", "opts": [{"l": "A", "t": "Cumulative Layout Shift"}, {"l": "B", "t": "Memory leak"}, {"l": "C", "t": "Rendering block"}, {"l": "D", "t": "Cache overflow"}], "ans": "A", "anst": "Cumulative Layout Shift"},
+{"n": 131, "t": "How do raster images (JPEG, PNG, GIF) represent graphics?", "type": "mc", "opts": [{"l": "A", "t": "Mathematical equations describing vectors"}, {"l": "B", "t": "Fixed grids of individual pixels"}, {"l": "C", "t": "Pure CSS coordinates"}, {"l": "D", "t": "Executable JavaScript scripts"}], "ans": "B", "anst": "Fixed grids of individual pixels"},
+{"n": 132, "t": "What happens to raster images when they are significantly enlarged?", "type": "mc", "opts": [{"l": "A", "t": "They scale infinitely without loss"}, {"l": "B", "t": "They become pixelated or blurry"}, {"l": "C", "t": "They convert automatically into vector shapes"}, {"l": "D", "t": "They change file format to SVG"}], "ans": "B", "anst": "They become pixelated or blurry"},
+{"n": 133, "t": "What does the acronym SVG stand for?", "type": "mc", "opts": [{"l": "A", "t": "Scalable Vector Graphics"}, {"l": "B", "t": "Standard Video Graphic"}, {"l": "C", "t": "Scalable Variable Grid"}, {"l": "D", "t": "System Vector Geometry"}], "ans": "A", "anst": "Scalable Vector Graphics"},
+{"n": 134, "t": "What underlying format is SVG based upon?", "type": "mc", "opts": [{"l": "A", "t": "JSON"}, {"l": "B", "t": "XML"}, {"l": "C", "t": "Binary BLOB"}, {"l": "D", "t": "Markdown"}], "ans": "B", "anst": "XML"},
+{"n": 135, "t": "Which of the following is a primary advantage of SVG graphics?", "type": "mc", "opts": [{"l": "A", "t": "They have larger file sizes than uncompressed TIFFs"}, {"l": "B", "t": "Infinite scalability without pixelation at any resolution"}, {"l": "C", "t": "They cannot be styled by CSS"}, {"l": "D", "t": "They are completely invisible to search engines"}], "ans": "B", "anst": "Infinite scalability without pixelation at any resolution"},
+{"n": 136, "t": "Can the internal elements of an inline SVG graphic be styled with CSS and manipulated by JavaScript?", "type": "mc", "opts": [{"l": "A", "t": "No, SVGs are immutable once loaded"}, {"l": "B", "t": "Yes, colors can change on hover and parts can be animated"}, {"l": "C", "t": "Only if converted to Canvas"}, {"l": "D", "t": "Only on mobile browsers"}], "ans": "B", "anst": "Yes, colors can change on hover and parts can be animated"},
+{"n": 137, "t": "Is text inside an SVG readable by screen readers and indexable by search engines?", "type": "mc", "opts": [{"l": "A", "t": "No, it is compiled to raw binary pixels"}, {"l": "B", "t": "Yes, because it is written in semantic XML text markup"}, {"l": "C", "t": "Only if embedded as a PNG file"}, {"l": "D", "t": "Only when opened in dedicated image editing software"}], "ans": "B", "anst": "Yes, because it is written in semantic XML text markup"},
+{"n": 138, "t": "Which tag is used to draw a circular shape inside an `<svg>` element?", "type": "mc", "opts": [{"l": "A", "t": "`<oval>`"}, {"l": "B", "t": "`<circle>`"}, {"l": "C", "t": "`<round>`"}, {"l": "D", "t": "`<arc>`"}], "ans": "B", "anst": "`<circle>`"},
+{"n": 139, "t": "What HTML5 native elements replaced third-party multimedia plugins like Flash?", "type": "mc", "opts": [{"l": "A", "t": "`<media>` and `<stream>`"}, {"l": "B", "t": "`<audio>` and `<video>`"}, {"l": "C", "t": "`<object>` and `<embed>`"}, {"l": "D", "t": "`<player>` and `<sound>`"}], "ans": "B", "anst": "`<audio>` and `<video>`"},
+{"n": 140, "t": "Which boolean attribute adds default playback controls (play, pause, volume) to `<audio>` or `<video>`?", "type": "mc", "opts": [{"l": "A", "t": "`buttons`"}, {"l": "B", "t": "`controls`"}, {"l": "C", "t": "`interface`"}, {"l": "D", "t": "`autoplay`"}], "ans": "B", "anst": "`controls`"},
+{"n": 141, "t": "Why are multiple `<source>` elements typically nested inside an `<audio>` or `<video>` tag?", "type": "mc", "opts": [{"l": "A", "t": "To play multiple audio tracks simultaneously"}, {"l": "B", "t": "To provide multiple file formats so the browser can play the first format it supports"}, {"l": "C", "t": "To repeat the media multiple times"}, {"l": "D", "t": "To serve files to different geographic regions"}], "ans": "B", "anst": "To provide multiple file formats so the browser can play the first format it supports"},
+{"n": 142, "t": "What happens to fallback text placed inside `<audio>Fallback</audio>` tags?", "type": "mc", "opts": [{"l": "A", "t": "It is read aloud before the audio plays"}, {"l": "B", "t": "It is displayed only if the browser does not support the audio element"}, {"l": "C", "t": "It displays permanently as a subtitle track"}, {"l": "D", "t": "It is indexed as CSS styling"}], "ans": "B", "anst": "It is displayed only if the browser does not support the audio element"},
+{"n": 143, "t": "Which attribute on a `<video>` element specifies an image to display before the video plays?", "type": "mc", "opts": [{"l": "A", "t": "`thumbnail`"}, {"l": "B", "t": "`poster`"}, {"l": "C", "t": "`preview`"}, {"l": "D", "t": "`src-image`"}], "ans": "B", "anst": "`poster`"},
+{"n": 144, "t": "What does the `muted` attribute do when placed on a `<video>` element?", "type": "mc", "opts": [{"l": "A", "t": "Deletes the audio track permanently"}, {"l": "B", "t": "Sets the default audio playback to silent"}, {"l": "C", "t": "Lowers visual contrast"}, {"l": "D", "t": "Blocks user interaction"}], "ans": "B", "anst": "Sets the default audio playback to silent"},
+{"n": 145, "t": "What does the `loop` attribute do on multimedia elements?", "type": "mc", "opts": [{"l": "A", "t": "Causes the media to start over automatically when finished"}, {"l": "B", "t": "Plays the track backwards"}, {"l": "C", "t": "Links the video to social media"}, {"l": "D", "t": "Compresses file playback bitrate"}], "ans": "A", "anst": "Causes the media to start over automatically when finished"},
+{"n": 146, "t": "Which video container format is most widely supported across modern browsers?", "type": "mc", "opts": [{"l": "A", "t": "AVI"}, {"l": "B", "t": "MP4"}, {"l": "C", "t": "WMV"}, {"l": "D", "t": "FLV"}], "ans": "B", "anst": "MP4"},
+{"n": 147, "t": "What does the `<iframe>` element do?", "type": "mc", "opts": [{"l": "A", "t": "Creates an animated vector boundary"}, {"l": "B", "t": "Embeds an entirely separate HTML document within the current page"}, {"l": "C", "t": "Takes a screenshot of the viewport"}, {"l": "D", "t": "Connects to local hardware webcams"}], "ans": "B", "anst": "Embeds an entirely separate HTML document within the current page"},
+{"n": 148, "t": "Which of the following is a common use case for an `<iframe>`?", "type": "mc", "opts": [{"l": "A", "t": "Writing paragraph copy"}, {"l": "B", "t": "Embedding YouTube videos or Google Maps"}, {"l": "C", "t": "Declaring the viewport scale"}, {"l": "D", "t": "Setting document character encoding"}], "ans": "B", "anst": "Embedding YouTube videos or Google Maps"},
+{"n": 149, "t": "What attribute is critical for restricting the capabilities of content inside an `<iframe>` for security?", "type": "mc", "opts": [{"l": "A", "t": "`secure`"}, {"l": "B", "t": "`sandbox`"}, {"l": "C", "t": "`protect`"}, {"l": "D", "t": "`lockdown`"}], "ans": "B", "anst": "`sandbox`"},
+{"n": 150, "t": "What performance attribute should be added to `<iframe>` tags to defer loading until near the viewport?", "type": "mc", "opts": [{"l": "A", "t": "`defer=\"script\"`"}, {"l": "B", "t": "`loading=\"lazy\"`"}, {"l": "C", "t": "`cache=\"offline\"`"}, {"l": "D", "t": "`render=\"async\"`"}], "ans": "B", "anst": "`loading=\"lazy\"`"},
+{"n": 151, "t": "What does the acronym SEO stand for?", "type": "mc", "opts": [{"l": "A", "t": "Search Engine Optimization"}, {"l": "B", "t": "System Execution Order"}, {"l": "C", "t": "Server Engine Operations"}, {"l": "D", "t": "Standard Electronic Outline"}], "ans": "A", "anst": "Search Engine Optimization"},
+{"n": 152, "t": "What is organic search engine traffic?", "type": "mc", "opts": [{"l": "A", "t": "Traffic bought through pay-per-click advertising"}, {"l": "B", "t": "Unpaid, natural search engine results"}, {"l": "C", "t": "Visitors arriving strictly through direct local network cables"}, {"l": "D", "t": "Traffic generated by internal corporate bots"}], "ans": "B", "anst": "Unpaid, natural search engine results"},
+{"n": 153, "t": "What software do search engines use to scan and index the web?", "type": "mc", "opts": [{"l": "A", "t": "Compilers"}, {"l": "B", "t": "Crawlers or bots"}, {"l": "C", "t": "Transpilers"}, {"l": "D", "t": "Proxy caches"}], "ans": "B", "anst": "Crawlers or bots"},
+{"n": 154, "t": "Which HTML element is considered arguably the most important on-page SEO factor?", "type": "mc", "opts": [{"l": "A", "t": "`<footer>`"}, {"l": "B", "t": "`<title>`"}, {"l": "C", "t": "`<b>`"}, {"l": "D", "t": "`<span>`"}], "ans": "B", "anst": "`<title>`"},
+{"n": 155, "t": "Why is a structured heading hierarchy (`<h1>`-`<h6>`) crucial for SEO?", "type": "mc", "opts": [{"l": "A", "t": "It automatically doubles page download speeds"}, {"l": "B", "t": "It provides search engines with a clear thematic outline of the page"}, {"l": "C", "t": "It hides keywords from human visitors"}, {"l": "D", "t": "It compiles external JavaScript faster"}], "ans": "B", "anst": "It provides search engines with a clear thematic outline of the page"},
+{"n": 156, "t": "How do semantic HTML tags like `<article>`, `<section>`, and `<nav>` assist search bots?", "type": "mc", "opts": [{"l": "A", "t": "By translating words into foreign languages"}, {"l": "B", "t": "By providing rich context regarding the specific functional regions of the page"}, {"l": "C", "t": "By increasing server bandwidth"}, {"l": "D", "t": "By eliminating the need for DOCTYPE declarations"}], "ans": "B", "anst": "By providing rich context regarding the specific functional regions of the page"},
+{"n": 157, "t": "How does image `alt` text benefit search engine optimization?", "type": "mc", "opts": [{"l": "A", "t": "It allows crawlers to understand image subject matter and index images in search results"}, {"l": "B", "t": "It changes image file compression automatically"}, {"l": "C", "t": "It creates back-links to image hosting providers"}, {"l": "D", "t": "It executes background tracking scripts"}], "ans": "A", "anst": "It allows crawlers to understand image subject matter and index images in search results"},
+{"n": 158, "t": "What mobile indexing approach is primarily employed by Google?", "type": "mc", "opts": [{"l": "A", "t": "Desktop-first indexing"}, {"l": "B", "t": "Mobile-first indexing"}, {"l": "C", "t": "Tablet-only indexing"}, {"l": "D", "t": "Offline-first indexing"}], "ans": "B", "anst": "Mobile-first indexing"},
+{"n": 159, "t": "What tool provided by the W3C checks HTML code against official web standards?", "type": "mc", "opts": [{"l": "A", "t": "W3C Markup Validation Service"}, {"l": "B", "t": "Chrome Task Manager"}, {"l": "C", "t": "Google Search Console Inspector"}, {"l": "D", "t": "Node Package Validator"}], "ans": "A", "anst": "W3C Markup Validation Service"},
+{"n": 160, "t": "Why is writing lowercase tags and attributes considered a best practice?", "type": "mc", "opts": [{"l": "A", "t": "Uppercase tags crash web browsers immediately"}, {"l": "B", "t": "It maintains consistent, clean, and modern code readability"}, {"l": "C", "t": "Search engines reject uppercase HTML"}, {"l": "D", "t": "Lowercase tags reduce internet bandwidth costs by half"}], "ans": "B", "anst": "It maintains consistent, clean, and modern code readability"},
+{"n": 161, "t": "What is the best practice regarding attribute values in HTML5?", "type": "mc", "opts": [{"l": "A", "t": "Always enclose attribute values in quotes"}, {"l": "B", "t": "Leave attribute values completely unquoted"}, {"l": "C", "t": "Separate values using semi-colons"}, {"l": "D", "t": "Capitalize all attribute values"}], "ans": "A", "anst": "Always enclose attribute values in quotes"},
+{"n": 162, "t": "What is the architectural principle of \"Separation of Concerns\" in web development?", "type": "mc", "opts": [{"l": "A", "t": "Combining HTML, CSS, and database scripts in a single tag"}, {"l": "B", "t": "HTML handles structure and meaning; CSS handles styling; JavaScript handles behavior"}, {"l": "C", "t": "Running client and server code on the exact same physical chip"}, {"l": "D", "t": "Using only one file for an entire website"}], "ans": "B", "anst": "HTML handles structure and meaning; CSS handles styling; JavaScript handles behavior"},
+{"n": 163, "t": "Why should inline `style` attributes generally be avoided?", "type": "mc", "opts": [{"l": "A", "t": "They prevent browsers from rendering fonts"}, {"l": "B", "t": "They violate separation of concerns and make maintenance difficult"}, {"l": "C", "t": "They are illegal in HTML5"}, {"l": "D", "t": "They reduce screen resolution"}], "ans": "B", "anst": "They violate separation of concerns and make maintenance difficult"},
+{"n": 164, "t": "What is the correct syntax for writing comments in HTML?", "type": "mc", "opts": [{"l": "A", "t": "`// This is a comment`"}, {"l": "B", "t": "`<!-- This is a comment -->`"}, {"l": "C", "t": "`/* This is a comment */`"}, {"l": "D", "t": "`# This is a comment`"}], "ans": "B", "anst": "`<!-- This is a comment -->`"},
+{"n": 165, "t": "Are HTML comments visible on the rendered web page screen?", "type": "mc", "opts": [{"l": "A", "t": "Yes, in gray italics"}, {"l": "B", "t": "No, they are ignored by the browser rendering engine"}, {"l": "C", "t": "Yes, inside a tooltip box"}, {"l": "D", "t": "Only on desktop screens"}], "ans": "B", "anst": "No, they are ignored by the browser rendering engine"},
+{"n": 166, "t": "Can users view HTML comments by opening browser \"View Source\"?", "type": "mc", "opts": [{"l": "A", "t": "No, comments are stripped before network transmission"}, {"l": "B", "t": "Yes, comments are sent in plain text in the HTML response"}, {"l": "C", "t": "Only if they enter a server administrator password"}, {"l": "D", "t": "Only on Linux computers"}], "ans": "B", "anst": "Yes, comments are sent in plain text in the HTML response"},
+{"n": 167, "t": "Why should comments be used sparingly and deliberately?", "type": "mc", "opts": [{"l": "A", "t": "Each comment reduces website rankings by 10%"}, {"l": "B", "t": "Code should be inherently clean and semantic; comments should explain complex sections, not obvious tags"}, {"l": "C", "t": "Comments cause screen readers to stutter"}, {"l": "D", "t": "Comments disable CSS stylesheets"}], "ans": "B", "anst": "Code should be inherently clean and semantic; comments should explain complex sections, not obvious tags"},
+{"n": 168, "t": "What role does page loading speed play in SEO?", "type": "mc", "opts": [{"l": "A", "t": "It is completely disregarded by modern search engines"}, {"l": "B", "t": "Faster, cleaner, well-structured pages rank higher in search results"}, {"l": "C", "t": "Speed only matters for sites running Flash"}, {"l": "D", "t": "Slow speeds increase search impressions"}], "ans": "B", "anst": "Faster, cleaner, well-structured pages rank higher in search results"},
+{"n": 169, "t": "What accessibility feature on the `<html>` element also aids international SEO?", "type": "mc", "opts": [{"l": "A", "t": "`class=\"ltr\"`"}, {"l": "B", "t": "`lang=\"[code]\"`"}, {"l": "C", "t": "`data-seo=\"true\"`"}, {"l": "D", "t": "`id=\"root\"`"}], "ans": "B", "anst": "`lang=\"[code]\"`"},
+{"n": 170, "t": "Which of the following tags is an outdated stylistic element that modern semantic HTML avoids?", "type": "mc", "opts": [{"l": "A", "t": "`<font>`"}, {"l": "B", "t": "`<header>`"}, {"l": "C", "t": "`<main>`"}, {"l": "D", "t": "`<nav>`"}], "ans": "A", "anst": "`<font>`"},
+{"n": 171, "t": "What non-semantic element was historically overused to build entire page layouts?", "type": "mc", "opts": [{"l": "A", "t": "`<p>`"}, {"l": "B", "t": "`<div>`"}, {"l": "C", "t": "`<span>`"}, {"l": "D", "t": "`<b>`"}], "ans": "B", "anst": "`<div>`"},
+{"n": 172, "t": "Why is relying exclusively on `<div>` tags bad for accessibility and search engines?", "type": "mc", "opts": [{"l": "A", "t": "Divs cannot accept CSS styles"}, {"l": "B", "t": "A `<div>` conveys zero semantic meaning regarding its content or purpose"}, {"l": "C", "t": "Divs cause network packet corruption"}, {"l": "D", "t": "Divs fail to render on smartphone screens"}], "ans": "B", "anst": "A `<div>` conveys zero semantic meaning regarding its content or purpose"},
+{"n": 173, "t": "What is the definition of Semantic HTML?", "type": "mc", "opts": [{"l": "A", "t": "Using tags that clearly describe their meaning and purpose to browsers, machines, and developers"}, {"l": "B", "t": "Compiling HTML markup into binary code"}, {"l": "C", "t": "Replacing text with vector images"}, {"l": "D", "t": "Writing inline CSS styling inside paragraph tags"}], "ans": "A", "anst": "Using tags that clearly describe their meaning and purpose to browsers, machines, and developers"},
+{"n": 174, "t": "What is the primary semantic purpose of the `<header>` element?", "type": "mc", "opts": [{"l": "A", "t": "To display copyright links at the bottom of a page"}, {"l": "B", "t": "To serve as a container for introductory content, site titles, or navigational aids"}, {"l": "C", "t": "To declare the metadata inside `<head>`"}, {"l": "D", "t": "To define tabular row headers"}], "ans": "B", "anst": "To serve as a container for introductory content, site titles, or navigational aids"},
+{"n": 175, "t": "Can a webpage contain more than one `<header>` element?", "type": "mc", "opts": [{"l": "A", "t": "No, only one is permitted per entire domain"}, {"l": "B", "t": "Yes, individual sections and `<article>` tags can have their own `<header>`"}, {"l": "C", "t": "Only if using an XHTML validator"}, {"l": "D", "t": "No, exactly one `<header>` is allowed per `<body>`"}], "ans": "B", "anst": "Yes, individual sections and `<article>` tags can have their own `<header>`"},
+{"n": 176, "t": "What is the `<nav>` element specifically designed to contain?", "type": "mc", "opts": [{"l": "A", "t": "All hyperlinks appearing anywhere in the page body"}, {"l": "B", "t": "Major navigational blocks of links such as primary menus, pagination, or tables of contents"}, {"l": "C", "t": "External links pointing to social networks only"}, {"l": "D", "t": "Search engine tracking scripts"}], "ans": "B", "anst": "Major navigational blocks of links such as primary menus, pagination, or tables of contents"},
+{"n": 177, "t": "How do assistive screen readers take advantage of the `<nav>` tag?", "type": "mc", "opts": [{"l": "A", "t": "They mute the speaker audio"}, {"l": "B", "t": "They recognize navigation landmarks, allowing users to jump directly to or skip over navigation"}, {"l": "C", "t": "They translate menu items into Latin"}, {"l": "D", "t": "They hide navigation links automatically"}], "ans": "B", "anst": "They recognize navigation landmarks, allowing users to jump directly to or skip over navigation"},
+{"n": 178, "t": "Should every single hyperlink on a page be wrapped in a `<nav>` tag?", "type": "mc", "opts": [{"l": "A", "t": "Yes, all links require `<nav>`"}, {"l": "B", "t": "No, `<nav>` should be reserved for major navigation blocks"}, {"l": "C", "t": "Only footer links require `<nav>`"}, {"l": "D", "t": "Only image links require `<nav>`"}], "ans": "B", "anst": "No, `<nav>` should be reserved for major navigation blocks"},
+{"n": 179, "t": "What does the `<main>` element identify?", "type": "mc", "opts": [{"l": "A", "t": "The primary, unique content of the document"}, {"l": "B", "t": "The top navigation bar"}, {"l": "C", "t": "The footer copyright notice"}, {"l": "D", "t": "The sidebar advertisements"}], "ans": "A", "anst": "The primary, unique content of the document"},
+{"n": 180, "t": "How many `<main>` elements should be visible per webpage?", "type": "mc", "opts": [{"l": "A", "t": "Exactly one"}, {"l": "B", "t": "One for each section"}, {"l": "C", "t": "Up to five"}, {"l": "D", "t": "As many as needed for styling"}], "ans": "A", "anst": "Exactly one"},
+{"n": 181, "t": "Where is the `<main>` element NOT allowed to be nested?", "type": "mc", "opts": [{"l": "A", "t": "Directly inside `<body>`"}, {"l": "B", "t": "Inside `<header>`, `<footer>`, `<nav>`, or `<aside>`"}, {"l": "C", "t": "Inside the standard HTML document"}, {"l": "D", "t": "Beside an `<aside>` element"}], "ans": "B", "anst": "Inside `<header>`, `<footer>`, `<nav>`, or `<aside>`"},
+{"n": 182, "t": "What does the `<article>` element represent?", "type": "mc", "opts": [{"l": "A", "t": "A generic wrapper used only for applying CSS flexbox"}, {"l": "B", "t": "A self-contained, independent portion of content that could be distributed or reused on its own"}, {"l": "C", "t": "A small text disclaimer beneath an image"}, {"l": "D", "t": "An italicized quotation from a book"}], "ans": "B", "anst": "A self-contained, independent portion of content that could be distributed or reused on its own"},
+{"n": 183, "t": "Which of the following is an ideal candidate for an `<article>` tag?", "type": "mc", "opts": [{"l": "A", "t": "A blog post, news story, forum thread, or product card"}, {"l": "B", "t": "A site-wide footer navigation bar"}, {"l": "C", "t": "A solitary horizontal divider line"}, {"l": "D", "t": "The page viewport meta tag"}], "ans": "A", "anst": "A blog post, news story, forum thread, or product card"},
+{"n": 184, "t": "What does the `<section>` element define?", "type": "mc", "opts": [{"l": "A", "t": "A generic standalone section grouping related thematic content, typically with a heading"}, {"l": "B", "t": "An inline piece of highlighted text"}, {"l": "C", "t": "An external document embedded inside an iframe"}, {"l": "D", "t": "A single list item in a dropdown"}], "ans": "A", "anst": "A generic standalone section grouping related thematic content, typically with a heading"},
+{"n": 185, "t": "When should you use `<article>` instead of `<section>`?", "type": "mc", "opts": [{"l": "A", "t": "When the content is purely decorative"}, {"l": "B", "t": "When the content is standalone, independent, and reusable outside the context of the page"}, {"l": "C", "t": "When grouping generic elements purely for layout margins"}, {"l": "D", "t": "When creating a sidebar"}], "ans": "B", "anst": "When the content is standalone, independent, and reusable outside the context of the page"},
+{"n": 186, "t": "When is it appropriate to use a plain `<div>` rather than `<section>` or `<article>`?", "type": "mc", "opts": [{"l": "A", "t": "When grouping content that forms a distinct chapter of a book"}, {"l": "B", "t": "When the grouping is purely for visual styling or CSS layout scripting without semantic meaning"}, {"l": "C", "t": "When identifying the main heading of a webpage"}, {"l": "D", "t": "When defining navigation landmarks"}], "ans": "B", "anst": "When the grouping is purely for visual styling or CSS layout scripting without semantic meaning"},
+{"n": 187, "t": "What does the `<aside>` element represent?", "type": "mc", "opts": [{"l": "A", "t": "The primary article text"}, {"l": "B", "t": "Content tangentially related to surrounding content, such as sidebars, callouts, or related links"}, {"l": "C", "t": "An off-screen hidden password input"}, {"l": "D", "t": "A mandatory footer container"}], "ans": "B", "anst": "Content tangentially related to surrounding content, such as sidebars, callouts, or related links"},
+{"n": 188, "t": "What does the `<footer>` element define?", "type": "mc", "opts": [{"l": "A", "t": "The primary banner of the page"}, {"l": "B", "t": "A footer for its nearest sectioning ancestor or the page itself"}, {"l": "C", "t": "An input field for telephone numbers"}, {"l": "D", "t": "A table header cell"}], "ans": "B", "anst": "A footer for its nearest sectioning ancestor or the page itself"},
+{"n": 189, "t": "What information commonly resides in a page-level `<footer>`?", "type": "mc", "opts": [{"l": "A", "t": "Main page `<h1>` headline"}, {"l": "B", "t": "Copyright notices, contact information, privacy policy links, and site maps"}, {"l": "C", "t": "Character encoding meta tags"}, {"l": "D", "t": "Inline SVG circle paths"}], "ans": "B", "anst": "Copyright notices, contact information, privacy policy links, and site maps"},
+{"n": 190, "t": "What is a key benefit of replacing nested non-semantic divs with semantic layout elements?", "type": "mc", "opts": [{"l": "A", "t": "It makes the document structure immediately comprehensible to assistive technologies and search bots"}, {"l": "B", "t": "It halves the download size of all embedded raster images"}, {"l": "C", "t": "It compiles client-side code directly to C++"}, {"l": "D", "t": "It eliminates the need for any CSS styling"}], "ans": "A", "anst": "It makes the document structure immediately comprehensible to assistive technologies and search bots"},
+{"n": 191, "t": "What common abbreviation is used to represent the term \"Accessibility\"?", "type": "mc", "opts": [{"l": "A", "t": "a11y"}, {"l": "B", "t": "acc10y"}, {"l": "C", "t": "access9"}, {"l": "D", "t": "a8y"}], "ans": "A", "anst": "a11y"},
+{"n": 192, "t": "What is the core premise of Web Accessibility?", "type": "mc", "opts": [{"l": "A", "t": "Ensuring only mobile phone users can view web pages"}, {"l": "B", "t": "Making websites, tools, and technologies usable by everyone, including people with disabilities"}, {"l": "C", "t": "Requiring biometric logins on every web form"}, {"l": "D", "t": "Limiting website access to registered members"}], "ans": "B", "anst": "Making websites, tools, and technologies usable by everyone, including people with disabilities"},
+{"n": 193, "t": "Assistive software that reads text and structural elements aloud to blind users is called a:", "type": "mc", "opts": [{"l": "A", "t": "Screen magnifier"}, {"l": "B", "t": "Screen reader"}, {"l": "C", "t": "Web spider"}, {"l": "D", "t": "Transpiler"}], "ans": "B", "anst": "Screen reader"},
+{"n": 194, "t": "What accessible accommodations are needed for users with hearing impairments?", "type": "mc", "opts": [{"l": "A", "t": "Audio transcripts and video captions"}, {"l": "B", "t": "High-contrast monochrome palettes"}, {"l": "C", "t": "Default focus rings"}, {"l": "D", "t": "Keyboard-only switches"}], "ans": "A", "anst": "Audio transcripts and video captions"},
+{"n": 195, "t": "How do users with motor or physical disabilities often navigate web content?", "type": "mc", "opts": [{"l": "A", "t": "Through keyboard-only navigation, sip-and-puff switches, or voice control"}, {"l": "B", "t": "Using high-speed optical mice only"}, {"l": "C", "t": "By disabling all form controls"}, {"l": "D", "t": "By listening to screen reader tone frequencies"}], "ans": "A", "anst": "Through keyboard-only navigation, sip-and-puff switches, or voice control"},
+{"n": 196, "t": "How does clear semantic HTML structure benefit users with cognitive disabilities?", "type": "mc", "opts": [{"l": "A", "t": "It prevents browsers from downloading CSS"}, {"l": "B", "t": "It creates predictable interfaces, simple reading orders, and consistent layouts"}, {"l": "C", "t": "It hides long paragraphs from view"}, {"l": "D", "t": "It speeds up network server response times"}], "ans": "B", "anst": "It creates predictable interfaces, simple reading orders, and consistent layouts"},
+{"n": 197, "t": "Why are semantic heading tags (`<h1>`-`<h6>`) crucial for screen reader users?", "type": "mc", "opts": [{"l": "A", "t": "Screen reader users frequently navigate pages by jumping from heading to heading to build a mental outline"}, {"l": "B", "t": "Headings are the only elements that screen readers can pronounce"}, {"l": "C", "t": "Headings automatically enable computer microphones"}, {"l": "D", "t": "Headings bypass client-side validation"}], "ans": "A", "anst": "Screen reader users frequently navigate pages by jumping from heading to heading to build a mental outline"},
+{"n": 198, "t": "What do landmark elements like `<nav>`, `<main>`, and `<footer>` allow assistive tech users to do?", "type": "mc", "opts": [{"l": "A", "t": "Jump quickly between major functional regions of the page"}, {"l": "B", "t": "Change browser fonts to bold"}, {"l": "C", "t": "Download offline databases"}, {"l": "D", "t": "Bypass HTTP security certificates"}], "ans": "A", "anst": "Jump quickly between major functional regions of the page"},
+{"n": 199, "t": "What does the acronym ARIA stand for in web accessibility?", "type": "mc", "opts": [{"l": "A", "t": "Automated Responsive Internet Applications"}, {"l": "B", "t": "Accessible Rich Internet Applications"}, {"l": "C", "t": "Asynchronous Rendering Interface Architecture"}, {"l": "D", "t": "Advanced Rendering Integration Array"}], "ans": "B", "anst": "Accessible Rich Internet Applications"},
+{"n": 200, "t": "When should ARIA attributes primarily be utilized?", "type": "mc", "opts": [{"l": "A", "t": "As a total replacement for all native HTML elements"}, {"l": "B", "t": "When building complex custom UI widgets that lack native HTML semantic equivalents"}, {"l": "C", "t": "Exclusively for embedding vector graphics"}, {"l": "D", "t": "To force CSS styles to override browser defaults"}], "ans": "B", "anst": "When building complex custom UI widgets that lack native HTML semantic equivalents"},
+{"n": 201, "t": "What visual accessibility requirement relates to text visibility against its background?", "type": "mc", "opts": [{"l": "A", "t": "Sufficient color contrast"}, {"l": "B", "t": "Maximum font weight"}, {"l": "C", "t": "Dynamic text rotation"}, {"l": "D", "t": "Absolute positioning"}], "ans": "A", "anst": "Sufficient color contrast"},
+{"n": 202, "t": "Why is removing the default browser `:focus` ring with `outline: none` considered poor practice?", "type": "mc", "opts": [{"l": "A", "t": "It breaks image links"}, {"l": "B", "t": "Keyboard-only users lose visual track of which element is currently active or focused"}, {"l": "C", "t": "It triggers Quirks Mode in Chrome"}, {"l": "D", "t": "It converts links into plain text"}], "ans": "B", "anst": "Keyboard-only users lose visual track of which element is currently active or focused"},
+{"n": 203, "t": "Why should generic link text like \"Click Here\" or \"Read More\" be avoided?", "type": "mc", "opts": [{"l": "A", "t": "Screen reader users listening to an extracted list of links receive zero context about the link destination"}, {"l": "B", "t": "Search engines treat \"Click Here\" as a malicious virus trigger"}, {"l": "C", "t": "Hyperlinks must not contain English verbs"}, {"l": "D", "t": "Modern browsers refuse to execute navigation on generic phrases"}], "ans": "A", "anst": "Screen reader users listening to an extracted list of links receive zero context about the link destination"},
+{"n": 204, "t": "What is the accessible way to structure a hyperlink's text?", "type": "mc", "opts": [{"l": "A", "t": "Use the raw destination URL as the link text"}, {"l": "B", "t": "Use meaningful, descriptive phrases indicating where the link leads"}, {"l": "C", "t": "Use single numbers like \"1\", \"2\", \"3\""}, {"l": "D", "t": "Leave the link text blank and add an image"}], "ans": "B", "anst": "Use meaningful, descriptive phrases indicating where the link leads"},
+{"n": 205, "t": "Embedding accessibility into the HTML foundation from the start results in:", "type": "mc", "opts": [{"l": "A", "t": "Slower load times and clunky layouts"}, {"l": "B", "t": "A better, more robust user experience for all users"}, {"l": "C", "t": "The complete deprecation of CSS"}, {"l": "D", "t": "Incompatibility with legacy search bots"}], "ans": "B", "anst": "A better, more robust user experience for all users"},
+{"n": 206, "t": "What is the primary role of HTML forms on the web?", "type": "mc", "opts": [{"l": "A", "t": "Displaying non-interactive tabular records"}, {"l": "B", "t": "Providing the primary mechanism for users to send information to a web server"}, {"l": "C", "t": "Playing back audio and video streams"}, {"l": "D", "t": "Linking external CSS stylesheets"}], "ans": "B", "anst": "Providing the primary mechanism for users to send information to a web server"},
+{"n": 207, "t": "Which tag wraps all form controls and attributes for submission?", "type": "mc", "opts": [{"l": "A", "t": "`<input>`"}, {"l": "B", "t": "`<form>`"}, {"l": "C", "t": "`<fieldset>`"}, {"l": "D", "t": "`<submit>`"}], "ans": "B", "anst": "`<form>`"},
+{"n": 208, "t": "What does the `action` attribute on a `<form>` element specify?", "type": "mc", "opts": [{"l": "A", "t": "The client-side animation applied on click"}, {"l": "B", "t": "The destination URL (server script or API endpoint) where form data is sent"}, {"l": "C", "t": "The database password of the web server"}, {"l": "D", "t": "The CSS transition state"}], "ans": "B", "anst": "The destination URL (server script or API endpoint) where form data is sent"},
+{"n": 209, "t": "What does the `method` attribute on a `<form>` define?", "type": "mc", "opts": [{"l": "A", "t": "The HTTP method used to transfer data (e.g., GET or POST)"}, {"l": "B", "t": "The programming language used on the server"}, {"l": "C", "t": "The font rendering engine"}, {"l": "D", "t": "The character set encoding"}], "ans": "A", "anst": "The HTTP method used to transfer data (e.g., GET or POST)"},
+{"n": 210, "t": "How does the `GET` method transmit form data?", "type": "mc", "opts": [{"l": "A", "t": "Encrypted in binary within the network layer"}, {"l": "B", "t": "Appended directly to the URL as visible query parameters"}, {"l": "C", "t": "Hidden inside the HTTP request body payload"}, {"l": "D", "t": "Stored permanently in browser cookies"}], "ans": "B", "anst": "Appended directly to the URL as visible query parameters"},
+{"n": 211, "t": "When is the `GET` method appropriate for form submission?", "type": "mc", "opts": [{"l": "A", "t": "When submitting passwords and credit card details"}, {"l": "B", "t": "For non-sensitive data queries such as searches or data filtering"}, {"l": "C", "t": "When uploading multi-gigabyte media files"}, {"l": "D", "t": "When altering database records permanently"}], "ans": "B", "anst": "For non-sensitive data queries such as searches or data filtering"},
+{"n": 212, "t": "How does the `POST` method transmit form data to the server?", "type": "mc", "opts": [{"l": "A", "t": "In the address bar query string"}, {"l": "B", "t": "Inside the HTTP request body (not visible in the URL)"}, {"l": "C", "t": "Through DNS record modifications"}, {"l": "D", "t": "As plain text comments in the HTML head"}], "ans": "B", "anst": "Inside the HTTP request body (not visible in the URL)"},
+{"n": 213, "t": "When MUST the `POST` method be preferred over `GET`?", "type": "mc", "opts": [{"l": "A", "t": "When transmitting sensitive data (passwords) or submitting large volumes of data"}, {"l": "B", "t": "When running a simple Wikipedia keyword search"}, {"l": "C", "t": "When navigating between static pages"}, {"l": "D", "t": "When linking an external stylesheet"}], "ans": "A", "anst": "When transmitting sensitive data (passwords) or submitting large volumes of data"},
+{"n": 214, "t": "What element provides text labels for interactive form controls?", "type": "mc", "opts": [{"l": "A", "t": "`<label>`"}, {"l": "B", "t": "`<span>`"}, {"l": "C", "t": "`<caption>`"}, {"l": "D", "t": "`<legend>`"}], "ans": "A", "anst": "`<label>`"},
+{"n": 215, "t": "Why is the `<label>` element non-negotiable for accessibility?", "type": "mc", "opts": [{"l": "A", "t": "Browsers refuse to submit forms that lack labels"}, {"l": "B", "t": "Screen readers announce the label when the control receives focus, and clicking the label focuses the control"}, {"l": "C", "t": "Labels automatically encrypt form inputs"}, {"l": "D", "t": "Labels replace the need for input names"}], "ans": "B", "anst": "Screen readers announce the label when the control receives focus, and clicking the label focuses the control"},
+{"n": 216, "t": "How is an explicit programmatic association made between a `<label>` and an `<input>`?", "type": "mc", "opts": [{"l": "A", "t": "Matching the label's `for` attribute to the input's `id` attribute"}, {"l": "B", "t": "Giving them the exact same `class` name"}, {"l": "C", "t": "Matching the label's `name` to the input's `value`"}, {"l": "D", "t": "Placing them in separate tables"}], "ans": "A", "anst": "Matching the label's `for` attribute to the input's `id` attribute"},
+{"n": 217, "t": "What happens when a user clicks on an accessible `<label>` associated with a checkbox?", "type": "mc", "opts": [{"l": "A", "t": "The page reloads immediately"}, {"l": "B", "t": "The corresponding checkbox toggles its checked state"}, {"l": "C", "t": "The form submits to the server"}, {"l": "D", "t": "The text is highlighted in red"}], "ans": "B", "anst": "The corresponding checkbox toggles its checked state"},
+{"n": 218, "t": "Which versatile HTML tag creates various controls based on its `type` attribute?", "type": "mc", "opts": [{"l": "A", "t": "`<control>`"}, {"l": "B", "t": "`<input>`"}, {"l": "C", "t": "`<form>`"}, {"l": "D", "t": "`<button>`"}], "ans": "B", "anst": "`<input>`"},
+{"n": 219, "t": "What is the default control created by `<input>` if the `type` attribute is omitted?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"checkbox\"`"}, {"l": "B", "t": "`type=\"text\"`"}, {"l": "C", "t": "`type=\"submit\"`"}, {"l": "D", "t": "`type=\"radio\"`"}], "ans": "B", "anst": "`type=\"text\"`"},
+{"n": 220, "t": "What input type masks characters with dots or asterisks for security?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"mask\"`"}, {"l": "B", "t": "`type=\"password\"`"}, {"l": "C", "t": "`type=\"secret\"`"}, {"l": "D", "t": "`type=\"hidden\"`"}], "ans": "B", "anst": "`type=\"password\"`"},
+{"n": 221, "t": "What input type provides automatic client-side format validation for email addresses?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"text\"`"}, {"l": "B", "t": "`type=\"email\"`"}, {"l": "C", "t": "`type=\"mail\"`"}, {"l": "D", "t": "`type=\"address\"`"}], "ans": "B", "anst": "`type=\"email\"`"},
+{"n": 222, "t": "What input type restricts data entry to numbers and can display numeric spinner arrows?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"number\"`"}, {"l": "B", "t": "`type=\"digit\"`"}, {"l": "C", "t": "`type=\"calc\"`"}, {"l": "D", "t": "`type=\"integer\"`"}], "ans": "A", "anst": "`type=\"number\"`"},
+{"n": 223, "t": "What input type allows users to select zero, one, or multiple independent choices from a list?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"radio\"`"}, {"l": "B", "t": "`type=\"checkbox\"`"}, {"l": "C", "t": "`type=\"select\"`"}, {"l": "D", "t": "`type=\"toggle\"`"}], "ans": "B", "anst": "`type=\"checkbox\"`"},
+{"n": 224, "t": "What input type allows a user to select exactly ONE option from an exclusive group?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"checkbox\"`"}, {"l": "B", "t": "`type=\"radio\"`"}, {"l": "C", "t": "`type=\"button\"`"}, {"l": "D", "t": "`type=\"range\"`"}], "ans": "B", "anst": "`type=\"radio\"`"},
+{"n": 225, "t": "How do multiple radio buttons indicate that they belong to the same mutually exclusive group?", "type": "mc", "opts": [{"l": "A", "t": "By sharing the exact same `name` attribute"}, {"l": "B", "t": "By having identical `id` attributes"}, {"l": "C", "t": "By sharing the same `value` attribute"}, {"l": "D", "t": "By enclosing them in separate forms"}], "ans": "A", "anst": "By sharing the exact same `name` attribute"},
+{"n": 226, "t": "What HTML5 input type displays a visual horizontal slider control?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"slider\"`"}, {"l": "B", "t": "`type=\"range\"`"}, {"l": "C", "t": "`type=\"scroll\"`"}, {"l": "D", "t": "`type=\"meter\"`"}], "ans": "B", "anst": "`type=\"range\"`"},
+{"n": 227, "t": "What HTML5 input type triggers an interactive native calendar picker?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"calendar\"`"}, {"l": "B", "t": "`type=\"date\"`"}, {"l": "C", "t": "`type=\"time\"`"}, {"l": "D", "t": "`type=\"datetime\"`"}], "ans": "B", "anst": "`type=\"date\"`"},
+{"n": 228, "t": "What HTML5 input type opens an operating system native color palette picker?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"color\"`"}, {"l": "B", "t": "`type=\"palette\"`"}, {"l": "C", "t": "`type=\"rgb\"`"}, {"l": "D", "t": "`type=\"hex\"`"}], "ans": "A", "anst": "`type=\"color\"`"},
+{"n": 229, "t": "What input type allows users to browse and select local files for server upload?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"upload\"`"}, {"l": "B", "t": "`type=\"file\"`"}, {"l": "C", "t": "`type=\"document\"`"}, {"l": "D", "t": "`type=\"attachment\"`"}], "ans": "B", "anst": "`type=\"file\"`"},
+{"n": 230, "t": "Can an `<input>` element contain nested text content like `<input>Click</input>`?", "type": "mc", "opts": [{"l": "A", "t": "Yes, all input types support text"}, {"l": "B", "t": "No, `<input>` is a void (self-closing) element without closing tags"}, {"l": "C", "t": "Only when `type=\"submit\"`"}, {"l": "D", "t": "Only in HTML 4.01 Validation)"}], "ans": "B", "anst": "No, `<input>` is a void (self-closing) element without closing tags"},
+{"n": 231, "t": "Which attribute on a form control acts as the \"key\" sent to the server to identify submitted data?", "type": "mc", "opts": [{"l": "A", "t": "`id`"}, {"l": "B", "t": "`name`"}, {"l": "C", "t": "`class`"}, {"l": "D", "t": "`key`"}], "ans": "B", "anst": "`name`"},
+{"n": 232, "t": "What happens to the value of a form control if its `name` attribute is omitted entirely?", "type": "mc", "opts": [{"l": "A", "t": "The server stores it under a generic blank key"}, {"l": "B", "t": "The browser does not submit the control's data at all"}, {"l": "C", "t": "The browser generates an automatic random name"}, {"l": "D", "t": "The form triggers an alert error"}], "ans": "B", "anst": "The browser does not submit the control's data at all"},
+{"n": 233, "t": "What attribute specifies the initial or submitted data payload of an `<input>` element?", "type": "mc", "opts": [{"l": "A", "t": "`content`"}, {"l": "B", "t": "`value`"}, {"l": "C", "t": "`payload`"}, {"l": "D", "t": "`text`"}], "ans": "B", "anst": "`value`"},
+{"n": 234, "t": "Why is the `value` attribute strictly required on checkbox and radio inputs?", "type": "mc", "opts": [{"l": "A", "t": "It determines their visual width on screen"}, {"l": "B", "t": "It defines the actual data string sent to the server when that option is checked"}, {"l": "C", "t": "It provides the tooltip text on hover"}, {"l": "D", "t": "It acts as the database foreign key"}], "ans": "B", "anst": "It defines the actual data string sent to the server when that option is checked"},
+{"n": 235, "t": "Which element is used to collect multi-line text input from the user?", "type": "mc", "opts": [{"l": "A", "t": "`<input type=\"multiline\">`"}, {"l": "B", "t": "`<textarea>`"}, {"l": "C", "t": "`<textbox>`"}, {"l": "D", "t": "`<text>`"}], "ans": "B", "anst": "`<textarea>`"},
+{"n": 236, "t": "Unlike `<input>`, does `<textarea>` require an explicit closing tag `</textarea>`?", "type": "mc", "opts": [{"l": "A", "t": "No, it is a void element"}, {"l": "B", "t": "Yes, it has opening and closing tags and encloses its initial text inside"}, {"l": "C", "t": "Only when placed inside a table"}, {"l": "D", "t": "Only in older HTML versions"}], "ans": "B", "anst": "Yes, it has opening and closing tags and encloses its initial text inside"},
+{"n": 237, "t": "What attributes control the default physical dimensions (rows and columns) of a `<textarea>`?", "type": "mc", "opts": [{"l": "A", "t": "`width` and `height`"}, {"l": "B", "t": "`rows` and `cols`"}, {"l": "C", "t": "`size` and `length`"}, {"l": "D", "t": "`top` and `left`"}], "ans": "B", "anst": "`rows` and `cols`"},
+{"n": 238, "t": "What paired elements are used to create a drop-down selection menu?", "type": "mc", "opts": [{"l": "A", "t": "`<menu>` and `<li>`"}, {"l": "B", "t": "`<select>` and `<option>`"}, {"l": "C", "t": "`<dropdown>` and `<item>`"}, {"l": "D", "t": "`<list>` and `<option>`"}], "ans": "B", "anst": "`<select>` and `<option>`"},
+{"n": 239, "t": "In a drop-down menu, where does the user-visible display label reside?", "type": "mc", "opts": [{"l": "A", "t": "In the `<select>` tag attributes"}, {"l": "B", "t": "Between the opening and closing `<option>` tags"}, {"l": "C", "t": "In the `value` attribute of `<select>`"}, {"l": "D", "t": "In the CSS stylesheet"}], "ans": "B", "anst": "Between the opening and closing `<option>` tags"},
+{"n": 240, "t": "What is submitted to the server when an `<option>` is chosen from a `<select>` dropdown?", "type": "mc", "opts": [{"l": "A", "t": "The visible text if no `value` is set, or the specified `value` attribute string"}, {"l": "B", "t": "The line number of the option"}, {"l": "C", "t": "The CSS class of the option"}, {"l": "D", "t": "The page URL"}], "ans": "A", "anst": "The visible text if no `value` is set, or the specified `value` attribute string"},
+{"n": 241, "t": "What is the primary benefit of native client-side form validation in HTML5?", "type": "mc", "opts": [{"l": "A", "t": "It replaces all need for server-side security"}, {"l": "B", "t": "It provides instant user feedback and prevents unnecessary requests to the server"}, {"l": "C", "t": "It encrypts form data automatically"}, {"l": "D", "t": "It guarantees zero spam submissions"}], "ans": "B", "anst": "It provides instant user feedback and prevents unnecessary requests to the server"},
+{"n": 242, "t": "Which boolean attribute prevents a form from submitting until the specified field is filled?", "type": "mc", "opts": [{"l": "A", "t": "`validate`"}, {"l": "B", "t": "`required`"}, {"l": "C", "t": "`mandatory`"}, {"l": "D", "t": "`locked`"}], "ans": "B", "anst": "`required`"},
+{"n": 243, "t": "What happens if a user clicks submit on a form where a `required` input field is left empty?", "type": "mc", "opts": [{"l": "A", "t": "The page crashes"}, {"l": "B", "t": "The browser blocks submission and displays a native contextual warning message"}, {"l": "C", "t": "The server returns a 500 error"}, {"l": "D", "t": "The form submits empty strings"}], "ans": "B", "anst": "The browser blocks submission and displays a native contextual warning message"},
+{"n": 244, "t": "What attributes specify numeric or date boundary constraints on `<input>` fields?", "type": "mc", "opts": [{"l": "A", "t": "`start` and `end`"}, {"l": "B", "t": "`min` and `max`"}, {"l": "C", "t": "`floor` and `ceiling`"}, {"l": "D", "t": "`lower` and `upper`"}], "ans": "B", "anst": "`min` and `max`"},
+{"n": 245, "t": "What attribute sets the legal stepping interval for numeric inputs (e.g., increments of 5)?", "type": "mc", "opts": [{"l": "A", "t": "`skip`"}, {"l": "B", "t": "`step`"}, {"l": "C", "t": "`interval`"}, {"l": "D", "t": "`range`"}], "ans": "B", "anst": "`step`"},
+{"n": 246, "t": "Which attributes enforce minimum and maximum text character limits on inputs or textareas?", "type": "mc", "opts": [{"l": "A", "t": "`charlimit` and `maxchar`"}, {"l": "B", "t": "`minlength` and `maxlength`"}, {"l": "C", "t": "`size` and `capacity`"}, {"l": "D", "t": "`length` and `breadth`"}], "ans": "B", "anst": "`minlength` and `maxlength`"},
+{"n": 247, "t": "Which element is used to group related form controls together logically and visually?", "type": "mc", "opts": [{"l": "A", "t": "`<section>`"}, {"l": "B", "t": "`<fieldset>`"}, {"l": "C", "t": "`<group>`"}, {"l": "D", "t": "`<div>`"}], "ans": "B", "anst": "`<fieldset>`"},
+{"n": 248, "t": "How do browsers conventionally render a `<fieldset>` by default?", "type": "mc", "opts": [{"l": "A", "t": "With a thin rectangular border enclosing the grouped elements"}, {"l": "B", "t": "With a solid black background"}, {"l": "C", "t": "As a hidden modal window"}, {"l": "D", "t": "In two side-by-side columns"}], "ans": "A", "anst": "With a thin rectangular border enclosing the grouped elements"},
+{"n": 249, "t": "Which element provides a caption or title for a `<fieldset>`?", "type": "mc", "opts": [{"l": "A", "t": "`<label>`"}, {"l": "B", "t": "`<legend>`"}, {"l": "C", "t": "`<caption>`"}, {"l": "D", "t": "`<title>`"}], "ans": "B", "anst": "`<legend>`"},
+{"n": 250, "t": "Where must the `<legend>` tag be placed inside a form?", "type": "mc", "opts": [{"l": "A", "t": "Outside the `<form>`"}, {"l": "B", "t": "As the very first child immediately inside the `<fieldset>` element"}, {"l": "C", "t": "Immediately before the closing `</form>` tag"}, {"l": "D", "t": "Inside an `<input>` tag"}], "ans": "B", "anst": "As the very first child immediately inside the `<fieldset>` element"},
+{"n": 251, "t": "What is the ONLY legitimate semantic use case for HTML `<table>` elements?", "type": "mc", "opts": [{"l": "A", "t": "Structuring multi-column responsive page layouts"}, {"l": "B", "t": "Representing tabular data organized in logical rows and columns"}, {"l": "C", "t": "Centering interactive forms on the screen"}, {"l": "D", "t": "Creating CSS grid masonry galleries"}], "ans": "B", "anst": "Representing tabular data organized in logical rows and columns"},
+{"n": 252, "t": "What modern CSS specifications should be used for layout design instead of tables?", "type": "mc", "opts": [{"l": "A", "t": "CSS Grid or Flexbox"}, {"l": "B", "t": "Blink and Marquee"}, {"l": "C", "t": "HTML Framesets"}, {"l": "D", "t": "XML Schemas"}], "ans": "A", "anst": "CSS Grid or Flexbox"},
+{"n": 253, "t": "Which element serves as the outermost wrapper for an HTML table?", "type": "mc", "opts": [{"l": "A", "t": "`<grid>`"}, {"l": "B", "t": "`<table>`"}, {"l": "C", "t": "`<tabular>`"}, {"l": "D", "t": "`<matrix>`"}], "ans": "B", "anst": "`<table>`"},
+{"n": 254, "t": "Which element defines a single row within an HTML table?", "type": "mc", "opts": [{"l": "A", "t": "`<td>`"}, {"l": "B", "t": "`<tr>`"}, {"l": "C", "t": "`<th>`"}, {"l": "D", "t": "`<row>`"}], "ans": "B", "anst": "`<tr>`"},
+{"n": 255, "t": "What does the acronym `<tr>` stand for?", "type": "mc", "opts": [{"l": "A", "t": "Table Record"}, {"l": "B", "t": "Table Row"}, {"l": "C", "t": "True Ratio"}, {"l": "D", "t": "Tabular Route"}], "ans": "B", "anst": "Table Row"},
+{"n": 256, "t": "Which tag defines a standard individual data cell in a table?", "type": "mc", "opts": [{"l": "A", "t": "`<th>`"}, {"l": "B", "t": "`<td>`"}, {"l": "C", "t": "`<dc>`"}, {"l": "D", "t": "`<tc>`"}], "ans": "B", "anst": "`<td>`"},
+{"n": 257, "t": "What does the acronym `<td>` represent?", "type": "mc", "opts": [{"l": "A", "t": "Table Data"}, {"l": "B", "t": "Table Division"}, {"l": "C", "t": "True Data"}, {"l": "D", "t": "Table Definition"}], "ans": "A", "anst": "Table Data"},
+{"n": 258, "t": "Which element defines a header cell in an HTML table?", "type": "mc", "opts": [{"l": "A", "t": "`<td>`"}, {"l": "B", "t": "`<th>`"}, {"l": "C", "t": "`<thead>`"}, {"l": "D", "t": "`<hdr>`"}], "ans": "B", "anst": "`<th>`"},
+{"n": 259, "t": "How do web browsers visually render `<th>` header cells by default?", "type": "mc", "opts": [{"l": "A", "t": "Italicized and left-aligned"}, {"l": "B", "t": "Bold and centered"}, {"l": "C", "t": "Underlined and red"}, {"l": "D", "t": "Enclosed in parentheses"}], "ans": "B", "anst": "Bold and centered"},
+{"n": 260, "t": "Why are `<th>` tags essential for accessibility?", "type": "mc", "opts": [{"l": "A", "t": "They double the font size for visually impaired users"}, {"l": "B", "t": "Screen readers use them to announce row and column context to users navigating cells"}, {"l": "C", "t": "They allow tables to be exported to Microsoft Excel"}, {"l": "D", "t": "They prevent tables from horizontal scrolling"}], "ans": "B", "anst": "Screen readers use them to announce row and column context to users navigating cells"},
+{"n": 261, "t": "What element provides an accessible, visible title or summary for an entire table?", "type": "mc", "opts": [{"l": "A", "t": "`<legend>`"}, {"l": "B", "t": "`<caption>`"}, {"l": "C", "t": "`<label>`"}, {"l": "D", "t": "`<thead>`"}], "ans": "B", "anst": "`<caption>`"},
+{"n": 262, "t": "Where must the `<caption>` element be placed in table markup?", "type": "mc", "opts": [{"l": "A", "t": "As the first child immediately after the opening `<table>` tag"}, {"l": "B", "t": "At the very end after `</tfoot>`"}, {"l": "C", "t": "Inside the first `<td>` cell"}, {"l": "D", "t": "Inside the table header row"}], "ans": "A", "anst": "As the first child immediately after the opening `<table>` tag"},
+{"n": 263, "t": "Which semantic element groups header rows in a table?", "type": "mc", "opts": [{"l": "A", "t": "`<tbody>`"}, {"l": "B", "t": "`<thead>`"}, {"l": "C", "t": "`<tfoot>`"}, {"l": "D", "t": "`<thgroup>`"}], "ans": "B", "anst": "`<thead>`"},
+{"n": 264, "t": "Which semantic element groups the main body data rows in a table?", "type": "mc", "opts": [{"l": "A", "t": "`<thead>`"}, {"l": "B", "t": "`<tbody>`"}, {"l": "C", "t": "`<tfoot>`"}, {"l": "D", "t": "`<tablebody>`"}], "ans": "B", "anst": "`<tbody>`"},
+{"n": 265, "t": "Which semantic element groups footer or summary rows in a table (e.g., column totals)?", "type": "mc", "opts": [{"l": "A", "t": "`<thead>`"}, {"l": "B", "t": "`<tfoot>`"}, {"l": "C", "t": "`<tbody>`"}, {"l": "D", "t": "`<bottom>`"}], "ans": "B", "anst": "`<tfoot>`"},
+{"n": 266, "t": "What attribute makes a table cell span horizontally across multiple columns?", "type": "mc", "opts": [{"l": "A", "t": "`rowspan`"}, {"l": "B", "t": "`colspan`"}, {"l": "C", "t": "`colwidth`"}, {"l": "D", "t": "`span`"}], "ans": "B", "anst": "`colspan`"},
+{"n": 267, "t": "What attribute makes a table cell span vertically across multiple rows?", "type": "mc", "opts": [{"l": "A", "t": "`colspan`"}, {"l": "B", "t": "`rowspan`"}, {"l": "C", "t": "`rowheight`"}, {"l": "D", "t": "`vspan`"}], "ans": "B", "anst": "`rowspan`"},
+{"n": 268, "t": "If a cell has `colspan=\"3\"`, how many column widths does it occupy?", "type": "mc", "opts": [{"l": "A", "t": "1"}, {"l": "B", "t": "2"}, {"l": "C", "t": "3"}, {"l": "D", "t": "4"}], "ans": "C", "anst": "3"},
+{"n": 269, "t": "How should borders, cell padding, and zebra-striping colors be added to modern HTML tables?", "type": "mc", "opts": [{"l": "A", "t": "Using deprecated HTML attributes like `border=\"1\"` and `cellpadding=\"5\"`"}, {"l": "B", "t": "Exclusively using external or embedded CSS styling rules"}, {"l": "C", "t": "Using JavaScript DOM manipulation only"}, {"l": "D", "t": "Through server-side database configuration"}], "ans": "B", "anst": "Exclusively using external or embedded CSS styling rules"},
+{"n": 270, "t": "In an accessible financial sales table, what element should contain the final \"Total\" row?", "type": "mc", "opts": [{"l": "A", "t": "`<thead>`"}, {"l": "B", "t": "`<tfoot>`"}, {"l": "C", "t": "`<caption>`"}, {"l": "D", "t": "`<aside>`"}], "ans": "B", "anst": "`<tfoot>`"},
+{"n": 271, "t": "What does the acronym RWD stand for in web development?", "type": "mc", "opts": [{"l": "A", "t": "Rapid Web Deployment"}, {"l": "B", "t": "Responsive Web Design"}, {"l": "C", "t": "Remote Web Domain"}, {"l": "D", "t": "Relational Web Database"}], "ans": "B", "anst": "Responsive Web Design"},
+{"n": 272, "t": "What is the fundamental goal of Responsive Web Design?", "type": "mc", "opts": [{"l": "A", "t": "Forcing all devices to render websites at desktop resolution"}, {"l": "B", "t": "Ensuring content is structured and presented optimally across diverse devices and screen sizes"}, {"l": "C", "t": "Developing completely separate web domains for every device model"}, {"l": "D", "t": "Compressing text content to fit on a single screen"}], "ans": "B", "anst": "Ensuring content is structured and presented optimally across diverse devices and screen sizes"},
+{"n": 273, "t": "What is the indispensable HTML foundation for responsive behavior on mobile devices?", "type": "mc", "opts": [{"l": "A", "t": "`<meta name=\"keywords\">`"}, {"l": "B", "t": "`<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">`"}, {"l": "C", "t": "`<link rel=\"responsive\">`"}, {"l": "D", "t": "`<!DOCTYPE mobile>`"}], "ans": "B", "anst": "`<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">`"},
+{"n": 274, "t": "What do mobile browsers do if the viewport meta tag is completely missing?", "type": "mc", "opts": [{"l": "A", "t": "Refuse to load the website"}, {"l": "B", "t": "Assume a wide desktop screen and shrink the page down, making everything unreadably small"}, {"l": "C", "t": "Convert the HTML into an audio file"}, {"l": "D", "t": "Display a white blank screen"}], "ans": "B", "anst": "Assume a wide desktop screen and shrink the page down, making everything unreadably small"},
+{"n": 275, "t": "In responsive CSS, what mechanism defines layout rules for specific screen width ranges?", "type": "mc", "opts": [{"l": "A", "t": "Breakpoints and Media Queries"}, {"l": "B", "t": "HTTP Headers"}, {"l": "C", "t": "Doctype triggers"}, {"l": "D", "t": "Canvas context rules"}], "ans": "A", "anst": "Breakpoints and Media Queries"},
+{"n": 276, "t": "Why are relative units (e.g., %, vw, vh, fr) preferred over fixed pixels (px) in responsive design?", "type": "mc", "opts": [{"l": "A", "t": "Relative units execute faster in JavaScript"}, {"l": "B", "t": "Elements scale fluidly and automatically adjust to varying screen dimensions"}, {"l": "C", "t": "Fixed pixels are deprecated in HTML5"}, {"l": "D", "t": "Search engines do not index pages using pixels"}], "ans": "B", "anst": "Elements scale fluidly and automatically adjust to varying screen dimensions"},
+{"n": 277, "t": "What design philosophy advocates designing the simplest mobile layout first before enhancing for large screens?", "type": "mc", "opts": [{"l": "A", "t": "Desktop-first approach"}, {"l": "B", "t": "Mobile-First approach"}, {"l": "C", "t": "Server-First design"}, {"l": "D", "t": "Media-centric architecture"}], "ans": "B", "anst": "Mobile-First approach"},
+{"n": 278, "t": "How does well-structured semantic HTML naturally behave when layouts reflow onto small screens?", "type": "mc", "opts": [{"l": "A", "t": "It stacks in a logical linear order without breaking readability"}, {"l": "B", "t": "It hides all headings automatically"}, {"l": "C", "t": "It crashes the DOM tree"}, {"l": "D", "t": "It forces the user to pinch and zoom continuously"}], "ans": "A", "anst": "It stacks in a logical linear order without breaking readability"},
+{"n": 279, "t": "Why is serving a desktop-sized 4K image file to a mobile phone considered bad practice?", "type": "mc", "opts": [{"l": "A", "t": "The phone screen will physically burn out"}, {"l": "B", "t": "It wastes mobile bandwidth and slows page load times significantly"}, {"l": "C", "t": "It prevents CSS media queries from firing"}, {"l": "D", "t": "Modern smartphones cannot decode JPEG images"}], "ans": "B", "anst": "It wastes mobile bandwidth and slows page load times significantly"},
+{"n": 280, "t": "What modern HTML feature allows an `<img>` tag to supply multiple image files with different pixel widths?", "type": "mc", "opts": [{"l": "A", "t": "`href`"}, {"l": "B", "t": "`srcset`"}, {"l": "C", "t": "`alt`"}, {"l": "D", "t": "`source-file`"}], "ans": "B", "anst": "`srcset`"},
+{"n": 281, "t": "Along with `srcset`, what companion attribute informs the browser of the intended layout display size?", "type": "mc", "opts": [{"l": "A", "t": "`media`"}, {"l": "B", "t": "`sizes`"}, {"l": "C", "t": "`dimension`"}, {"l": "D", "t": "`scale`"}], "ans": "B", "anst": "`sizes`"},
+{"n": 282, "t": "When using `srcset` and `sizes`, who ultimately decides which image asset to download?", "type": "mc", "opts": [{"l": "A", "t": "The web server"}, {"l": "B", "t": "The web browser (client)"}, {"l": "C", "t": "The search engine crawler"}, {"l": "D", "t": "The web developer manually"}], "ans": "B", "anst": "The web browser (client)"},
+{"n": 283, "t": "What unit is used inside the `srcset` attribute to specify the intrinsic image pixel width (e.g., `640w`)?", "type": "mc", "opts": [{"l": "A", "t": "`px`"}, {"l": "B", "t": "`w`"}, {"l": "C", "t": "`dpi`"}, {"l": "D", "t": "`%`"}], "ans": "B", "anst": "`w`"},
+{"n": 284, "t": "Which HTML element gives developers explicit control over serving different image crops or formats?", "type": "mc", "opts": [{"l": "A", "t": "`<picture>`"}, {"l": "B", "t": "`<img>`"}, {"l": "C", "t": "`<figure>`"}, {"l": "D", "t": "`<canvas>`"}], "ans": "A", "anst": "`<picture>`"},
+{"n": 285, "t": "In a `<picture>` element, what child tags are evaluated in order before falling back to `<img>`?", "type": "mc", "opts": [{"l": "A", "t": "`<source>`"}, {"l": "B", "t": "`<crop>`"}, {"l": "C", "t": "`<media>`"}, {"l": "D", "t": "`<video>`"}], "ans": "A", "anst": "`<source>`"},
+{"n": 286, "t": "What is \"art direction\" in the context of responsive images?", "type": "mc", "opts": [{"l": "A", "t": "Changing CSS font families on different screens"}, {"l": "B", "t": "Serving completely different image crops or compositions tailored for small screens versus large screens"}, {"l": "C", "t": "Converting all colored images into black and white"}, {"l": "D", "t": "Painting borders around vector elements"}], "ans": "B", "anst": "Serving completely different image crops or compositions tailored for small screens versus large screens"},
+{"n": 287, "t": "Which image format offers superior modern compression compared to legacy JPEGs and PNGs?", "type": "mc", "opts": [{"l": "A", "t": "BMP"}, {"l": "B", "t": "WebP"}, {"l": "C", "t": "TIFF"}, {"l": "D", "t": "ICO"}], "ans": "B", "anst": "WebP"},
+{"n": 288, "t": "How does `<picture>` handle browsers that do not support modern formats like WebP?", "type": "mc", "opts": [{"l": "A", "t": "It fails silently and breaks"}, {"l": "B", "t": "It falls back gracefully to the standard JPEG/PNG inside the nested `<img>`"}, {"l": "C", "t": "It redirects the user to an error page"}, {"l": "D", "t": "It installs a browser plugin automatically"}], "ans": "B", "anst": "It falls back gracefully to the standard JPEG/PNG inside the nested `<img>`"},
+{"n": 289, "t": "Is an `<img>` element still mandatory when using the `<picture>` wrapper element?", "type": "mc", "opts": [{"l": "A", "t": "No, `<picture>` replaces `<img>` completely"}, {"l": "B", "t": "Yes, the `<img>` is required as the final fallback and provides the display target"}, {"l": "C", "t": "Only if alt text is omitted"}, {"l": "D", "t": "Only on mobile browsers"}], "ans": "B", "anst": "Yes, the `<img>` is required as the final fallback and provides the display target"},
+{"n": 290, "t": "What is the fundamental takeaway regarding the mastery of HTML?", "type": "mc", "opts": [{"l": "A", "t": "HTML is obsolete and replaced by JavaScript frameworks"}, {"l": "B", "t": "Mastering HTML structure, semantics, and accessibility is the essential foundation of quality web development"}, {"l": "C", "t": "Web developers should avoid semantic tags in favor of generic divs"}, {"l": "D", "t": "HTML is strictly used for database storage"}], "ans": "B", "anst": "Mastering HTML structure, semantics, and accessibility is the essential foundation of quality web development"},
+{"n": 291, "t": "If an HTML document omits `<!DOCTYPE html>`, which rendering mode will modern browsers activate?", "type": "mc", "opts": [{"l": "A", "t": "Standards Mode"}, {"l": "B", "t": "Quirks Mode"}, {"l": "C", "t": "Strict Mode"}, {"l": "D", "t": "Universal Mode"}], "ans": "B", "anst": "Quirks Mode"},
+{"n": 292, "t": "In the Request-Response cycle, which entity performs DNS lookup?", "type": "mc", "opts": [{"l": "A", "t": "The Server"}, {"l": "B", "t": "The Client (Browser)"}, {"l": "C", "t": "The Database Engine"}, {"l": "D", "t": "The Destination API"}], "ans": "B", "anst": "The Client (Browser)"},
+{"n": 293, "t": "Which status code indicates that the server successfully processed the request and delivered content?", "type": "mc", "opts": [{"l": "A", "t": "301"}, {"l": "B", "t": "200 OK"}, {"l": "C", "t": "404"}, {"l": "D", "t": "500"}], "ans": "B", "anst": "200 OK"},
+{"n": 294, "t": "What is the Document Object Model (DOM)?", "type": "mc", "opts": [{"l": "A", "t": "A binary file compiled on the web server"}, {"l": "B", "t": "An in-memory hierarchical tree representation of the HTML document constructed by the browser"}, {"l": "C", "t": "The CSS stylesheet syntax validator"}, {"l": "D", "t": "A local database storing cookies"}], "ans": "B", "anst": "An in-memory hierarchical tree representation of the HTML document constructed by the browser"},
+{"n": 295, "t": "Which of the following is a void (self-closing) element according to the HTML5 specification?", "type": "mc", "opts": [{"l": "A", "t": "`<span>`"}, {"l": "B", "t": "`<hr>`"}, {"l": "C", "t": "`<textarea>`"}, {"l": "D", "t": "`<table>`"}], "ans": "B", "anst": "`<hr>`"},
+{"n": 296, "t": "Can an element possess multiple classes in its `class` attribute?", "type": "mc", "opts": [{"l": "A", "t": "No, HTML strictly permits only one class per element"}, {"l": "B", "t": "Yes, separated by spaces within the class attribute quotes"}, {"l": "C", "t": "Yes, separated by commas"}, {"l": "D", "t": "Only inside the `<body>` tag"}], "ans": "B", "anst": "Yes, separated by spaces within the class attribute quotes"},
+{"n": 297, "t": "Which attribute is uniquely qualified to serve as a CSS fragment identifier for on-page navigation?", "type": "mc", "opts": [{"l": "A", "t": "`class`"}, {"l": "B", "t": "`id`"}, {"l": "C", "t": "`name`"}, {"l": "D", "t": "`title`"}], "ans": "B", "anst": "`id`"},
+{"n": 298, "t": "Which heading tag represents the secondary major section titles beneath the main document title?", "type": "mc", "opts": [{"l": "A", "t": "`<h1>`"}, {"l": "B", "t": "`<h2>`"}, {"l": "C", "t": "`<h3>`"}, {"l": "D", "t": "`<h6>`"}], "ans": "B", "anst": "`<h2>`"},
+{"n": 299, "t": "In terms of vocal emphasis by screen readers, which tag implies stress emphasis?", "type": "mc", "opts": [{"l": "A", "t": "`<i>`"}, {"l": "B", "t": "`<em>`"}, {"l": "C", "t": "`<span>`"}, {"l": "D", "t": "`<mark>`"}], "ans": "B", "anst": "`<em>`"},
+{"n": 300, "t": "In terms of semantic weight, which tag denotes strong importance or urgency?", "type": "mc", "opts": [{"l": "A", "t": "`<b>`"}, {"l": "B", "t": "`<strong>`"}, {"l": "C", "t": "`<em>`"}, {"l": "D", "t": "`<i>`"}], "ans": "B", "anst": "`<strong>`"},
+{"n": 301, "t": "What does the `<q>` tag insert around text by default in compliant browsers?", "type": "mc", "opts": [{"l": "A", "t": "Parentheses"}, {"l": "B", "t": "Quotation marks"}, {"l": "C", "t": "Indented margins"}, {"l": "D", "t": "Italics"}], "ans": "B", "anst": "Quotation marks"},
+{"n": 302, "t": "What is the semantic difference between `<blockquote>` and `<q>`?", "type": "mc", "opts": [{"l": "A", "t": "`<blockquote>` is inline, while `<q>` is block-level"}, {"l": "B", "t": "`<blockquote>` is block-level for long quotes, while `<q>` is inline for short phrases"}, {"l": "C", "t": "`<blockquote>` is deprecated; `<q>` is modern"}, {"l": "D", "t": "There is no semantic difference"}], "ans": "B", "anst": "`<blockquote>` is block-level for long quotes, while `<q>` is inline for short phrases"},
+{"n": 303, "t": "Why should developers avoid using chains of `<br><br><br>` to create visual vertical spacing?", "type": "mc", "opts": [{"l": "A", "t": "Browsers crash after three breaks"}, {"l": "B", "t": "Layout spacing is a presentation concern that belongs in CSS margins"}, {"l": "C", "t": "Screen readers disconnect from the network"}, {"l": "D", "t": "Search engines classify multiple line breaks as malicious code"}], "ans": "B", "anst": "Layout spacing is a presentation concern that belongs in CSS margins"},
+{"n": 304, "t": "What is the default bullet shape of an unordered list (`<ul>`)?", "type": "mc", "opts": [{"l": "A", "t": "Square"}, {"l": "B", "t": "Disc (solid bullet)"}, {"l": "C", "t": "Circle"}, {"l": "D", "t": "Triangle"}], "ans": "B", "anst": "Disc (solid bullet)"},
+{"n": 305, "t": "Which list type uses `<dt>` and `<dd>` elements?", "type": "mc", "opts": [{"l": "A", "t": "`<ul>`"}, {"l": "B", "t": "`<ol>`"}, {"l": "C", "t": "`<dl>`"}, {"l": "D", "t": "`<menu>`"}], "ans": "C", "anst": "`<dl>`"},
+{"n": 306, "t": "What does `<dt>` stand for in a description list?", "type": "mc", "opts": [{"l": "A", "t": "Description Total"}, {"l": "B", "t": "Description Term"}, {"l": "C", "t": "Data Text"}, {"l": "D", "t": "Document Type"}], "ans": "B", "anst": "Description Term"},
+{"n": 307, "t": "What does `<dd>` stand for in a description list?", "type": "mc", "opts": [{"l": "A", "t": "Description Detail / Description Data"}, {"l": "B", "t": "Document Definition"}, {"l": "C", "t": "Data Direct"}, {"l": "D", "t": "Double Division"}], "ans": "A", "anst": "Description Detail / Description Data"},
+{"n": 308, "t": "What kind of hyperlink points to a destination on the exact same server without specifying the domain name?", "type": "mc", "opts": [{"l": "A", "t": "Absolute URL"}, {"l": "B", "t": "Relative URL"}, {"l": "C", "t": "External URL"}, {"l": "D", "t": "Protocol URL"}], "ans": "B", "anst": "Relative URL"},
+{"n": 309, "t": "Which attribute on the `<a>` tag instructs the browser to open the link in a completely fresh browser tab?", "type": "mc", "opts": [{"l": "A", "t": "`target=\"_self\"`"}, {"l": "B", "t": "`target=\"_blank\"`"}, {"l": "C", "t": "`target=\"_parent\"`"}, {"l": "D", "t": "`target=\"_top\"`"}], "ans": "B", "anst": "`target=\"_blank\"`"},
+{"n": 310, "t": "What does an empty alt attribute (`alt=\"\"`) signify to assistive screen readers?", "type": "mc", "opts": [{"l": "A", "t": "The screen reader must announce the full URL"}, {"l": "B", "t": "The image is decorative and can be safely ignored"}, {"l": "C", "t": "The image failed to download"}, {"l": "D", "t": "The image has broken pixels"}], "ans": "B", "anst": "The image is decorative and can be safely ignored"},
+{"n": 311, "t": "Why do vector graphics (SVG) maintain crisp visuals at 8K resolutions while raster graphics blur?", "type": "mc", "opts": [{"l": "A", "t": "Vectors use higher color bitrates"}, {"l": "B", "t": "Vectors are mathematical formulas of lines and curves calculated dynamically at any scale"}, {"l": "C", "t": "Vectors contain uncompressed audio data"}, {"l": "D", "t": "Vectors are hosted on dedicated CDNs"}], "ans": "B", "anst": "Vectors are mathematical formulas of lines and curves calculated dynamically at any scale"},
+{"n": 312, "t": "Can an inline `<svg>` element be styled using CSS selectors like fill and stroke?", "type": "mc", "opts": [{"l": "A", "t": "No, vector shapes cannot receive CSS"}, {"l": "B", "t": "Yes, CSS properties directly style vector shapes"}, {"l": "C", "t": "Only if wrapped inside a `<div>`"}, {"l": "D", "t": "Only on desktop Firefox"}], "ans": "B", "anst": "Yes, CSS properties directly style vector shapes"},
+{"n": 313, "t": "Which multimedia element attribute displays play, pause, and volume controls?", "type": "mc", "opts": [{"l": "A", "t": "`interface`"}, {"l": "B", "t": "`controls`"}, {"l": "C", "t": "`panel`"}, {"l": "D", "t": "`settings`"}], "ans": "B", "anst": "`controls`"},
+{"n": 314, "t": "What occurs when a browser encounters multiple `<source>` tags inside a `<video>` element?", "type": "mc", "opts": [{"l": "A", "t": "It downloads and combines all of them simultaneously"}, {"l": "B", "t": "It evaluates them from top to bottom and plays the first format it natively supports"}, {"l": "C", "t": "It prompts the user with a download dialogue box"}, {"l": "D", "t": "It selects the file with the largest byte size"}], "ans": "B", "anst": "It evaluates them from top to bottom and plays the first format it natively supports"},
+{"n": 315, "t": "Which video attribute displays a placeholder thumbnail image prior to video playback?", "type": "mc", "opts": [{"l": "A", "t": "`thumbnail`"}, {"l": "B", "t": "`poster`"}, {"l": "C", "t": "`preview`"}, {"l": "D", "t": "`cover`"}], "ans": "B", "anst": "`poster`"},
+{"n": 316, "t": "What security attribute on an `<iframe>` prevents malicious scripts from hijacking parent pages?", "type": "mc", "opts": [{"l": "A", "t": "`sandbox`"}, {"l": "B", "t": "`guard`"}, {"l": "C", "t": "`secure-mode`"}, {"l": "D", "t": "`firewall`"}], "ans": "A", "anst": "`sandbox`"},
+{"n": 317, "t": "What does the attribute `loading=\"lazy\"` on images and iframes do?", "type": "mc", "opts": [{"l": "A", "t": "Never downloads the resource"}, {"l": "B", "t": "Defers fetching the resource until it is scrolled near the browser viewport"}, {"l": "C", "t": "Decreases the frame rate of videos"}, {"l": "D", "t": "Scales down image quality by half"}], "ans": "B", "anst": "Defers fetching the resource until it is scrolled near the browser viewport"},
+{"n": 318, "t": "Which on-page SEO element is displayed as the prominent clickable headline in search engine result pages?", "type": "mc", "opts": [{"l": "A", "t": "`<h1>`"}, {"l": "B", "t": "`<title>`"}, {"l": "C", "t": "`<meta charset>`"}, {"l": "D", "t": "`<footer>`"}], "ans": "B", "anst": "`<title>`"},
+{"n": 319, "t": "Why does having a single, clear `<h1>` heading per page benefit search engine indexing?", "type": "mc", "opts": [{"l": "A", "t": "It unlocks unlimited server bandwidth"}, {"l": "B", "t": "It provides search crawlers with an unambiguous indicator of the page's primary topic"}, {"l": "C", "t": "It disables ad blockers on user browsers"}, {"l": "D", "t": "It forces the site to rank first on Google"}], "ans": "B", "anst": "It provides search crawlers with an unambiguous indicator of the page's primary topic"},
+{"n": 320, "t": "What standard international organization publishes official web markup guidelines and validation tools?", "type": "mc", "opts": [{"l": "A", "t": "IEEE"}, {"l": "B", "t": "W3C (World Wide Web Consortium)"}, {"l": "C", "t": "ISO"}, {"l": "D", "t": "IETF"}], "ans": "B", "anst": "W3C (World Wide Web Consortium)"},
+{"n": 321, "t": "What happens when a web developer combines HTML structure with inline `style=\"\"` attributes on every tag?", "type": "mc", "opts": [{"l": "A", "t": "Page rendering speed triples"}, {"l": "B", "t": "It violates separation of concerns and results in bloated, unmaintainable markup"}, {"l": "C", "t": "The HTML code automatically complies with XHTML standards"}, {"l": "D", "t": "Browsers disable JavaScript execution"}], "ans": "B", "anst": "It violates separation of concerns and results in bloated, unmaintainable markup"},
+{"n": 322, "t": "Which semantic element is designated for the single, primary content area unique to the document?", "type": "mc", "opts": [{"l": "A", "t": "`<header>`"}, {"l": "B", "t": "`<main>`"}, {"l": "C", "t": "`<section>`"}, {"l": "D", "t": "`<article>`"}], "ans": "B", "anst": "`<main>`"},
+{"n": 323, "t": "Can a `<main>` tag be placed inside a `<header>` or `<footer>`?", "type": "mc", "opts": [{"l": "A", "t": "Yes, if using HTML5"}, {"l": "B", "t": "No, it must never be a descendant of header, footer, nav, or aside"}, {"l": "C", "t": "Only on mobile websites"}, {"l": "D", "t": "Only if styled with CSS flexbox"}], "ans": "B", "anst": "No, it must never be a descendant of header, footer, nav, or aside"},
+{"n": 324, "t": "Which semantic container is most appropriate for a self-contained blog post or news story?", "type": "mc", "opts": [{"l": "A", "t": "`<section>`"}, {"l": "B", "t": "`<article>`"}, {"l": "C", "t": "`<div>`"}, {"l": "D", "t": "`<aside>`"}], "ans": "B", "anst": "`<article>`"},
+{"n": 325, "t": "What semantic tag represents content tangentially related to the main flow, like a sidebar?", "type": "mc", "opts": [{"l": "A", "t": "`<article>`"}, {"l": "B", "t": "`<aside>`"}, {"l": "C", "t": "`<nav>`"}, {"l": "D", "t": "`<header>`"}], "ans": "B", "anst": "`<aside>`"},
+{"n": 326, "t": "What semantic element should wrap site-wide copyright text, legal links, and privacy policy disclaimers?", "type": "mc", "opts": [{"l": "A", "t": "`<footer>`"}, {"l": "B", "t": "`<bottom>`"}, {"l": "C", "t": "`<aside>`"}, {"l": "D", "t": "`<end>`"}], "ans": "A", "anst": "`<footer>`"},
+{"n": 327, "t": "Why do accessibility landmarks improve screen reader navigation efficiency?", "type": "mc", "opts": [{"l": "A", "t": "Users can jump directly between regions (like nav, main, footer) using keyboard shortcuts"}, {"l": "B", "t": "Landmarks disable graphics to speed up audio"}, {"l": "C", "t": "Landmarks eliminate all form validation"}, {"l": "D", "t": "Landmarks prevent external cookies from running"}], "ans": "A", "anst": "Users can jump directly between regions (like nav, main, footer) using keyboard shortcuts"},
+{"n": 328, "t": "What accessible issue occurs when an author writes link text that simply says \"Click Here\"?", "type": "mc", "opts": [{"l": "A", "t": "Screen readers cannot parse Latin characters"}, {"l": "B", "t": "Users navigating via links lists hear no context regarding what or where the link targets"}, {"l": "C", "t": "The browser flags the link as malware"}, {"l": "D", "t": "The link requires double-clicking to open"}], "ans": "B", "anst": "Users navigating via links lists hear no context regarding what or where the link targets"},
+{"n": 329, "t": "What is the primary purpose of the `action` attribute on a `<form>`?", "type": "mc", "opts": [{"l": "A", "t": "It triggers a JavaScript click handler"}, {"l": "B", "t": "It specifies the server endpoint or script URL where submitted form data will be transmitted"}, {"l": "C", "t": "It clears all form inputs on submit"}, {"l": "D", "t": "It animates form submission"}], "ans": "B", "anst": "It specifies the server endpoint or script URL where submitted form data will be transmitted"},
+{"n": 330, "t": "What happens to form data submitted via an HTTP `GET` request?", "type": "mc", "opts": [{"l": "A", "t": "It is appended to the destination URL as visible query strings"}, {"l": "B", "t": "It is encrypted and hidden in the body payload"}, {"l": "C", "t": "It is stored permanently in database tables"}, {"l": "D", "t": "It is transmitted over SMTP"}], "ans": "A", "anst": "It is appended to the destination URL as visible query strings"},
+{"n": 331, "t": "Why must user login passwords NEVER be transmitted using the `GET` method?", "type": "mc", "opts": [{"l": "A", "t": "The GET method refuses to submit text characters"}, {"l": "B", "t": "The password will appear in plain text in the browser URL bar, browser history, and server access logs"}, {"l": "C", "t": "The GET method limits passwords to two letters"}, {"l": "D", "t": "Passwords require database triggers"}], "ans": "B", "anst": "The password will appear in plain text in the browser URL bar, browser history, and server access logs"},
+{"n": 332, "t": "How is a `<label>` linked to an `<input>` for screen readers and clickable text focusing?", "type": "mc", "opts": [{"l": "A", "t": "`<label id=\"user\">` and `<input id=\"user\">`"}, {"l": "B", "t": "`<label for=\"user\">` and `<input id=\"user\">`"}, {"l": "C", "t": "`<label name=\"user\">` and `<input name=\"user\">`"}, {"l": "D", "t": "`<label class=\"user\">` and `<input class=\"user\">`"}], "ans": "B", "anst": "`<label for=\"user\">` and `<input id=\"user\">`"},
+{"n": 333, "t": "What input type should be used for entering passwords securely?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"hidden\"`"}, {"l": "B", "t": "`type=\"password\"`"}, {"l": "C", "t": "`type=\"secure\"`"}, {"l": "D", "t": "`type=\"shield\"`"}], "ans": "B", "anst": "`type=\"password\"`"},
+{"n": 334, "t": "Which input type triggers client-side validation to verify the presence of an `@` symbol?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"text\"`"}, {"l": "B", "t": "`type=\"email\"`"}, {"l": "C", "t": "`type=\"username\"`"}, {"l": "D", "t": "`type=\"domain\"`"}], "ans": "B", "anst": "`type=\"email\"`"},
+{"n": 335, "t": "If a developer needs users to select several items from an optional hobby list, which input type is appropriate?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"radio\"`"}, {"l": "B", "t": "`type=\"checkbox\"`"}, {"l": "C", "t": "`type=\"submit\"`"}, {"l": "D", "t": "`type=\"range\"`"}], "ans": "B", "anst": "`type=\"checkbox\"`"},
+{"n": 336, "t": "If a developer needs users to select exactly ONE gender option, which input type should be used?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"checkbox\"`"}, {"l": "B", "t": "`type=\"radio\"`"}, {"l": "C", "t": "`type=\"file\"`"}, {"l": "D", "t": "`type=\"button\"`"}], "ans": "B", "anst": "`type=\"radio\"`"},
+{"n": 337, "t": "What shared attribute connects radio inputs together so that checking one unchecks the others?", "type": "mc", "opts": [{"l": "A", "t": "`id`"}, {"l": "B", "t": "`name`"}, {"l": "C", "t": "`class`"}, {"l": "D", "t": "`value`"}], "ans": "B", "anst": "`name`"},
+{"n": 338, "t": "What attribute must be present on a form control for its value to be transmitted to the server?", "type": "mc", "opts": [{"l": "A", "t": "`name`"}, {"l": "B", "t": "`id`"}, {"l": "C", "t": "`class`"}, {"l": "D", "t": "`style`"}], "ans": "A", "anst": "`name`"},
+{"n": 339, "t": "Which form control is best suited for typing multi-line messages, customer reviews, or essays?", "type": "mc", "opts": [{"l": "A", "t": "`<input type=\"text\">`"}, {"l": "B", "t": "`<textarea>`"}, {"l": "C", "t": "`<select>`"}, {"l": "D", "t": "`<fieldset>`"}], "ans": "B", "anst": "`<textarea>`"},
+{"n": 340, "t": "Which tag pair constructs a drop-down menu in HTML?", "type": "mc", "opts": [{"l": "A", "t": "`<form>` and `<input>`"}, {"l": "B", "t": "`<select>` and `<option>`"}, {"l": "C", "t": "`<ul>` and `<li>`"}, {"l": "D", "t": "`<dl>` and `<dd>`"}], "ans": "B", "anst": "`<select>` and `<option>`"},
+{"n": 341, "t": "What boolean attribute forces users to enter a value before the form can submit?", "type": "mc", "opts": [{"l": "A", "t": "`validate`"}, {"l": "B", "t": "`required`"}, {"l": "C", "t": "`autofocus`"}, {"l": "D", "t": "`checked`"}], "ans": "B", "anst": "`required`"},
+{"n": 342, "t": "What form element visually and semantically groups related controls, such as shipping address fields?", "type": "mc", "opts": [{"l": "A", "t": "`<fieldset>`"}, {"l": "B", "t": "`<section>`"}, {"l": "C", "t": "`<div>`"}, {"l": "D", "t": "`<caption>`"}], "ans": "A", "anst": "`<fieldset>`"},
+{"n": 343, "t": "What child element provides an accessible header or legend for a `<fieldset>`?", "type": "mc", "opts": [{"l": "A", "t": "`<label>`"}, {"l": "B", "t": "`<legend>`"}, {"l": "C", "t": "`<title>`"}, {"l": "D", "t": "`<caption>`"}], "ans": "B", "anst": "`<legend>`"},
+{"n": 344, "t": "Should HTML tables ever be used to lay out entire web page designs?", "type": "mc", "opts": [{"l": "A", "t": "Yes, it ensures compatibility with all screens"}, {"l": "B", "t": "No, tables must only be used for tabular data; layout belongs in CSS Grid/Flexbox"}, {"l": "C", "t": "Yes, if nested inside `<aside>` tags"}, {"l": "D", "t": "Only when building mobile sites"}], "ans": "B", "anst": "No, tables must only be used for tabular data; layout belongs in CSS Grid/Flexbox"},
+{"n": 345, "t": "Which tag defines a standard individual data cell within a table?", "type": "mc", "opts": [{"l": "A", "t": "`<tr>`"}, {"l": "B", "t": "`<td>`"}, {"l": "C", "t": "`<th>`"}, {"l": "D", "t": "`<caption>`"}], "ans": "B", "anst": "`<td>`"},
+{"n": 346, "t": "Which tag defines an accessible column or row header cell within a table?", "type": "mc", "opts": [{"l": "A", "t": "`<td>`"}, {"l": "B", "t": "`<th>`"}, {"l": "C", "t": "`<tr>`"}, {"l": "D", "t": "`<thead>`"}], "ans": "B", "anst": "`<th>`"},
+{"n": 347, "t": "What table attribute allows a header cell to merge horizontally across three column spaces?", "type": "mc", "opts": [{"l": "A", "t": "`rowspan=\"3\"`"}, {"l": "B", "t": "`colspan=\"3\"`"}, {"l": "C", "t": "`span=\"3\"`"}, {"l": "D", "t": "`cols=\"3\"`"}], "ans": "B", "anst": "`colspan=\"3\"`"},
+{"n": 348, "t": "What table attribute allows a cell to stretch vertically across two rows?", "type": "mc", "opts": [{"l": "A", "t": "`colspan=\"2\"`"}, {"l": "B", "t": "`rowspan=\"2\"`"}, {"l": "C", "t": "`vspan=\"2\"`"}, {"l": "D", "t": "`height=\"2\"`"}], "ans": "B", "anst": "`rowspan=\"2\"`"},
+{"n": 349, "t": "What meta tag ensures that mobile browsers render pages at native display scale rather than shrinking them?", "type": "mc", "opts": [{"l": "A", "t": "`<meta name=\"scale\" content=\"full\">`"}, {"l": "B", "t": "`<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">`"}, {"l": "C", "t": "`<meta name=\"screen\" content=\"mobile\">`"}, {"l": "D", "t": "`<meta http-equiv=\"responsive\" content=\"true\">`"}], "ans": "B", "anst": "`<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">`"},
+{"n": 350, "t": "What responsive image attribute allows the browser to pick the best image resolution from a comma-separated list?", "type": "mc", "opts": [{"l": "A", "t": "`src`"}, {"l": "B", "t": "`srcset`"}, {"l": "C", "t": "`href`"}, {"l": "D", "t": "`alt`"}], "ans": "B", "anst": "`srcset`"},
+{"n": 351, "t": "In the `srcset` attribute, what descriptor indicates an image's intrinsic pixel width?", "type": "mc", "opts": [{"l": "A", "t": "`x`"}, {"l": "B", "t": "`w`"}, {"l": "C", "t": "`px`"}, {"l": "D", "t": "`pt`"}], "ans": "B", "anst": "`w`"},
+{"n": 352, "t": "When should a developer use the `<picture>` element instead of a standard `<img>` with `srcset`?", "type": "mc", "opts": [{"l": "A", "t": "For all images on the web"}, {"l": "B", "t": "When specific art direction (different image cropping) or multiple image formats (e.g., WebP with JPEG fallback) are required"}, {"l": "C", "t": "Whenever an image is wrapped in a hyperlink"}, {"l": "D", "t": "To embed vector SVG graphics"}], "ans": "B", "anst": "When specific art direction (different image cropping) or multiple image formats (e.g., WebP with JPEG fallback) are required"},
+{"n": 353, "t": "Which element represents the thematic group of table header rows?", "type": "mc", "opts": [{"l": "A", "t": "`<tbody>`"}, {"l": "B", "t": "`<thead>`"}, {"l": "C", "t": "`<tfoot>`"}, {"l": "D", "t": "`<th>`"}], "ans": "B", "anst": "`<thead>`"},
+{"n": 354, "t": "What element is placed at the top of a table to provide an accessible caption?", "type": "mc", "opts": [{"l": "A", "t": "`<legend>`"}, {"l": "B", "t": "`<caption>`"}, {"l": "C", "t": "`<title>`"}, {"l": "D", "t": "`<label>`"}], "ans": "B", "anst": "`<caption>`"},
+{"n": 355, "t": "What protocol handles secure, encrypted communication between client and server?", "type": "mc", "opts": [{"l": "A", "t": "HTTP"}, {"l": "B", "t": "HTTPS"}, {"l": "C", "t": "FTP"}, {"l": "D", "t": "SMTP"}], "ans": "B", "anst": "HTTPS"},
+{"n": 356, "t": "What does an HTTP status code in the 400s indicate?", "type": "mc", "opts": [{"l": "A", "t": "Successful completion"}, {"l": "B", "t": "Client-side error (e.g., 404 Not Found, 403 Forbidden)"}, {"l": "C", "t": "Server internal crash"}, {"l": "D", "t": "Redirection"}], "ans": "B", "anst": "Client-side error (e.g., 404 Not Found, 403 Forbidden)"},
+{"n": 357, "t": "What does an HTTP status code in the 500s signify?", "type": "mc", "opts": [{"l": "A", "t": "Successful response"}, {"l": "B", "t": "Server-side error (e.g., 500 Internal Server Error)"}, {"l": "C", "t": "Missing client cookies"}, {"l": "D", "t": "Successful redirect"}], "ans": "B", "anst": "Server-side error (e.g., 500 Internal Server Error)"},
+{"n": 358, "t": "What happens during browser rendering when an external CSS link is encountered?", "type": "mc", "opts": [{"l": "A", "t": "The browser ignores it"}, {"l": "B", "t": "The browser sends an HTTP request to download the stylesheet and constructs the CSSOM"}, {"l": "C", "t": "The browser closes the network connection"}, {"l": "D", "t": "The HTML is converted to PDF"}], "ans": "B", "anst": "The browser sends an HTTP request to download the stylesheet and constructs the CSSOM"},
+{"n": 359, "t": "What standard character encoding should be declared on all modern web pages?", "type": "mc", "opts": [{"l": "A", "t": "ASCII"}, {"l": "B", "t": "UTF-8"}, {"l": "C", "t": "ISO-8859-1"}, {"l": "D", "t": "UTF-16"}], "ans": "B", "anst": "UTF-8"},
+{"n": 360, "t": "What is the effect of setting `lang=\"es\"` on the root `<html>` tag?", "type": "mc", "opts": [{"l": "A", "t": "It translates page text into Spanish on the server"}, {"l": "B", "t": "It tells user agents and screen readers that the document's primary language is Spanish"}, {"l": "C", "t": "It blocks non-Spanish IP addresses"}, {"l": "D", "t": "It changes all fonts to Spanish handwriting"}], "ans": "B", "anst": "It tells user agents and screen readers that the document's primary language is Spanish"},
+{"n": 361, "t": "Which element is used to insert a thematic horizontal dividing line between sections?", "type": "mc", "opts": [{"l": "A", "t": "`<break>`"}, {"l": "B", "t": "`<hr>`"}, {"l": "C", "t": "`<line>`"}, {"l": "D", "t": "`<divider>`"}], "ans": "B", "anst": "`<hr>`"},
+{"n": 362, "t": "What element represents inline code snippets or technical terms with neutral alternative voice?", "type": "mc", "opts": [{"l": "A", "t": "`<em>`"}, {"l": "B", "t": "`<i>`"}, {"l": "C", "t": "`<strong>`"}, {"l": "D", "t": "`<b>`"}], "ans": "B", "anst": "`<i>`"},
+{"n": 363, "t": "What element should be used to display an ordered procedure like a cooking recipe?", "type": "mc", "opts": [{"l": "A", "t": "`<ul>`"}, {"l": "B", "t": "`<ol>`"}, {"l": "C", "t": "`<dl>`"}, {"l": "D", "t": "`<div>`"}], "ans": "B", "anst": "`<ol>`"},
+{"n": 364, "t": "What attribute on an anchor tag indicates telephone dialing protocols?", "type": "mc", "opts": [{"l": "A", "t": "`href=\"call:12345\"`"}, {"l": "B", "t": "`href=\"tel:12345\"`"}, {"l": "C", "t": "`src=\"tel:12345\"`"}, {"l": "D", "t": "`action=\"dial:12345\"`"}], "ans": "B", "anst": "`href=\"tel:12345\"`"},
+{"n": 365, "t": "How can a link be constructed to immediately start an email draft?", "type": "mc", "opts": [{"l": "A", "t": "`href=\"email:user@test.com\"`"}, {"l": "B", "t": "`href=\"mailto:user@test.com\"`"}, {"l": "C", "t": "`target=\"mail\"`"}, {"l": "D", "t": "`rel=\"mailto\"`"}], "ans": "B", "anst": "`href=\"mailto:user@test.com\"`"},
+{"n": 366, "t": "What happens if an image `src` URL is misspelled or the server fails to serve it?", "type": "mc", "opts": [{"l": "A", "t": "The computer beeps an alert"}, {"l": "B", "t": "The browser renders a broken image placeholder and displays the `alt` text"}, {"l": "C", "t": "The entire webpage turns blank"}, {"l": "D", "t": "The browser redirects to Google"}], "ans": "B", "anst": "The browser renders a broken image placeholder and displays the `alt` text"},
+{"n": 367, "t": "Why does specifying explicit `width` and `height` attributes on images reduce Cumulative Layout Shift (CLS)?", "type": "mc", "opts": [{"l": "A", "t": "It resizes image file bytes"}, {"l": "B", "t": "It allows the browser engine to reserve the exact layout box space before the image file finishes downloading"}, {"l": "C", "t": "It speeds up internet broadband lines"}, {"l": "D", "t": "It renders the image in vector SVG"}], "ans": "B", "anst": "It allows the browser engine to reserve the exact layout box space before the image file finishes downloading"},
+{"n": 368, "t": "Can SVG images be scaled up to billboard size without losing visual clarity?", "type": "mc", "opts": [{"l": "A", "t": "No, SVGs blur beyond 1000px"}, {"l": "B", "t": "Yes, because they are vector calculations, not static pixel grids"}, {"l": "C", "t": "Only if converted to WebP"}, {"l": "D", "t": "Only when opened on Macintosh displays"}], "ans": "B", "anst": "Yes, because they are vector calculations, not static pixel grids"},
+{"n": 369, "t": "What fallback is provided inside `<audio>` or `<video>` elements?", "type": "mc", "opts": [{"l": "A", "t": "Plain text informing users that their browser does not support the native element"}, {"l": "B", "t": "An automatic link to download Google Chrome"}, {"l": "C", "t": "An MP3 download script"}, {"l": "D", "t": "A prompt to install Adobe Flash Player"}], "ans": "A", "anst": "Plain text informing users that their browser does not support the native element"},
+{"n": 370, "t": "Why was the deprecation of Flash in favor of native HTML5 audio/video an evolutionary leap?", "type": "mc", "opts": [{"l": "A", "t": "Flash was proprietary, insecure, battery-draining, and required external plugins"}, {"l": "B", "t": "Flash was too fast for modern internet connections"}, {"l": "C", "t": "Flash could only play silent animations"}, {"l": "D", "t": "Flash was never supported on desktop computers"}], "ans": "A", "anst": "Flash was proprietary, insecure, battery-draining, and required external plugins"},
+{"n": 371, "t": "What does the `sandbox` attribute do when placed on an `<iframe>` without any tokens?", "type": "mc", "opts": [{"l": "A", "t": "Grants the iframe full administrative control over the host browser"}, {"l": "B", "t": "Applies maximum security restrictions, disabling scripts, forms, and popups inside the iframe"}, {"l": "C", "t": "Hides the iframe off-screen"}, {"l": "D", "t": "Deletes all cookies on the parent domain"}], "ans": "B", "anst": "Applies maximum security restrictions, disabling scripts, forms, and popups inside the iframe"},
+{"n": 372, "t": "Which on-page element acts as the primary title in search engine results and browser tabs?", "type": "mc", "opts": [{"l": "A", "t": "`<h1>`"}, {"l": "B", "t": "`<title>`"}, {"l": "C", "t": "`<header>`"}, {"l": "D", "t": "`<meta name=\"description\">`"}], "ans": "B", "anst": "`<title>`"},
+{"n": 373, "t": "How many `<h1>` headings should conventionally be used on a single standard web page?", "type": "mc", "opts": [{"l": "A", "t": "None"}, {"l": "B", "t": "Exactly one"}, {"l": "C", "t": "Five"}, {"l": "D", "t": "Ten"}], "ans": "B", "anst": "Exactly one"},
+{"n": 374, "t": "What is the primary benefit of using semantic landmarks like `<header>`, `<nav>`, `<main>`, and `<footer>`?", "type": "mc", "opts": [{"l": "A", "t": "They replace all need for CSS color styles"}, {"l": "B", "t": "They provide meaningful structural meaning to search engines and assistive technologies"}, {"l": "C", "t": "They increase physical internet speed"}, {"l": "D", "t": "They make websites completely immune to cyberattacks"}], "ans": "B", "anst": "They provide meaningful structural meaning to search engines and assistive technologies"},
+{"n": 375, "t": "What tag is used for self-contained, syndicateable items like forum posts or product cards?", "type": "mc", "opts": [{"l": "A", "t": "`<section>`"}, {"l": "B", "t": "`<article>`"}, {"l": "C", "t": "`<div>`"}, {"l": "D", "t": "`<span>`"}], "ans": "B", "anst": "`<article>`"},
+{"n": 376, "t": "What tag is best suited for grouping related content within a page when a more specific semantic tag is unavailable?", "type": "mc", "opts": [{"l": "A", "t": "`<article>`"}, {"l": "B", "t": "`<section>`"}, {"l": "C", "t": "`<span>`"}, {"l": "D", "t": "`<aside>`"}], "ans": "B", "anst": "`<section>`"},
+{"n": 377, "t": "What should be done if a layout wrapper is needed solely for CSS flexbox alignment and has no semantic meaning?", "type": "mc", "opts": [{"l": "A", "t": "Use an `<article>` tag"}, {"l": "B", "t": "Use a generic `<div>` tag"}, {"l": "C", "t": "Use a `<section>` tag"}, {"l": "D", "t": "Use a `<main>` tag"}], "ans": "B", "anst": "Use a generic `<div>` tag"},
+{"n": 378, "t": "What does a screen reader do when encountering a link whose text is simply \"Click Here\"?", "type": "mc", "opts": [{"l": "A", "t": "Reads out the sentence \"Click Here\" without giving context about the destination"}, {"l": "B", "t": "Searches the server to find destination metadata"}, {"l": "C", "t": "Mutes the audio output automatically"}, {"l": "D", "t": "Translates the link into Spanish"}], "ans": "A", "anst": "Reads out the sentence \"Click Here\" without giving context about the destination"},
+{"n": 379, "t": "What happens if a form control does not include a `name` attribute when submitted?", "type": "mc", "opts": [{"l": "A", "t": "The browser submits it with an empty key"}, {"l": "B", "t": "Its value is completely omitted from the form submission payload"}, {"l": "C", "t": "The form produces a JavaScript runtime error"}, {"l": "D", "t": "The browser reloads the home page"}], "ans": "B", "anst": "Its value is completely omitted from the form submission payload"},
+{"n": 380, "t": "Which HTTP method exposes submitted form values in the browser's address bar?", "type": "mc", "opts": [{"l": "A", "t": "POST"}, {"l": "B", "t": "GET"}, {"l": "C", "t": "PUT"}, {"l": "D", "t": "DELETE"}], "ans": "B", "anst": "GET"},
+{"n": 381, "t": "Which HTTP method includes form parameters inside the message body payload?", "type": "mc", "opts": [{"l": "A", "t": "GET"}, {"l": "B", "t": "POST"}, {"l": "C", "t": "OPTIONS"}, {"l": "D", "t": "TRACE"}], "ans": "B", "anst": "POST"},
+{"n": 382, "t": "When creating a group of radio buttons, what attribute must be shared across all buttons in the group?", "type": "mc", "opts": [{"l": "A", "t": "`id`"}, {"l": "B", "t": "`name`"}, {"l": "C", "t": "`value`"}, {"l": "D", "t": "`title`"}], "ans": "B", "anst": "`name`"},
+{"n": 383, "t": "What HTML5 input type allows users to pick a numerical value by moving a slider thumb?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"slider\"`"}, {"l": "B", "t": "`type=\"range\"`"}, {"l": "C", "t": "`type=\"number\"`"}, {"l": "D", "t": "`type=\"dial\"`"}], "ans": "B", "anst": "`type=\"range\"`"},
+{"n": 384, "t": "What input type natively summons a date-picker calendar interface?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"time\"`"}, {"l": "B", "t": "`type=\"date\"`"}, {"l": "C", "t": "`type=\"calendar\"`"}, {"l": "D", "t": "`type=\"day\"`"}], "ans": "B", "anst": "`type=\"date\"`"},
+{"n": 385, "t": "What input type opens a color swatch picker for choosing hexadecimal colors?", "type": "mc", "opts": [{"l": "A", "t": "`type=\"palette\"`"}, {"l": "B", "t": "`type=\"color\"`"}, {"l": "C", "t": "`type=\"hex\"`"}, {"l": "D", "t": "`type=\"brush\"`"}], "ans": "B", "anst": "`type=\"color\"`"},
+{"n": 386, "t": "What form tag allows users to write multi-line feedback or comments?", "type": "mc", "opts": [{"l": "A", "t": "`<input type=\"text\">`"}, {"l": "B", "t": "`<textarea>`"}, {"l": "C", "t": "`<multiline>`"}, {"l": "D", "t": "`<select>`"}], "ans": "B", "anst": "`<textarea>`"},
+{"n": 387, "t": "How is the visible text inside a `<textarea>` initially defined in HTML markup?", "type": "mc", "opts": [{"l": "A", "t": "Through the `value` attribute"}, {"l": "B", "t": "Between the opening `<textarea>` and closing `</textarea>` tags"}, {"l": "C", "t": "Inside a `placeholder` attribute only"}, {"l": "D", "t": "Through a CSS pseudo-element"}], "ans": "B", "anst": "Between the opening `<textarea>` and closing `</textarea>` tags"},
+{"n": 388, "t": "What attribute makes a form control mandatory for submission?", "type": "mc", "opts": [{"l": "A", "t": "`mandatory`"}, {"l": "B", "t": "`required`"}, {"l": "C", "t": "`locked`"}, {"l": "D", "t": "`valid`"}], "ans": "B", "anst": "`required`"},
+{"n": 389, "t": "What attribute restricts a number input to values between 1 and 100?", "type": "mc", "opts": [{"l": "A", "t": "`start=\"1\" end=\"100\"`"}, {"l": "B", "t": "`min=\"1\" max=\"100\"`"}, {"l": "C", "t": "`range=\"1-100\"`"}, {"l": "D", "t": "`limit=\"100\"`"}], "ans": "B", "anst": "`min=\"1\" max=\"100\"`"},
+{"n": 390, "t": "What element wraps related inputs inside a bordered box and groups them semantically?", "type": "mc", "opts": [{"l": "A", "t": "`<group>`"}, {"l": "B", "t": "`<fieldset>`"}, {"l": "C", "t": "`<box>`"}, {"l": "D", "t": "`<section>`"}], "ans": "B", "anst": "`<fieldset>`"},
+{"n": 391, "t": "What tag provides the semantic caption for a `<fieldset>`?", "type": "mc", "opts": [{"l": "A", "t": "`<label>`"}, {"l": "B", "t": "`<legend>`"}, {"l": "C", "t": "`<caption>`"}, {"l": "D", "t": "`<title>`"}], "ans": "B", "anst": "`<legend>`"},
+{"n": 392, "t": "What tag defines a single row inside an HTML table?", "type": "mc", "opts": [{"l": "A", "t": "`<td>`"}, {"l": "B", "t": "`<tr>`"}, {"l": "C", "t": "`<th>`"}, {"l": "D", "t": "`<table>`"}], "ans": "B", "anst": "`<tr>`"},
+{"n": 393, "t": "What tag defines an individual regular data cell inside a table row?", "type": "mc", "opts": [{"l": "A", "t": "`<tr>`"}, {"l": "B", "t": "`<td>`"}, {"l": "C", "t": "`<th>`"}, {"l": "D", "t": "`<tc>`"}], "ans": "B", "anst": "`<td>`"},
+{"n": 394, "t": "What tag defines an individual column/row header cell inside a table row?", "type": "mc", "opts": [{"l": "A", "t": "`<td>`"}, {"l": "B", "t": "`<th>`"}, {"l": "C", "t": "`<tr>`"}, {"l": "D", "t": "`<caption>`"}], "ans": "B", "anst": "`<th>`"},
+{"n": 395, "t": "What table attribute allows a single cell to span horizontally across four columns?", "type": "mc", "opts": [{"l": "A", "t": "`colspan=\"4\"`"}, {"l": "B", "t": "`rowspan=\"4\"`"}, {"l": "C", "t": "`span=\"4\"`"}, {"l": "D", "t": "`width=\"4\"`"}], "ans": "A", "anst": "`colspan=\"4\"`"},
+{"n": 396, "t": "What table attribute allows a single cell to stretch vertically across three rows?", "type": "mc", "opts": [{"l": "A", "t": "`colspan=\"3\"`"}, {"l": "B", "t": "`rowspan=\"3\"`"}, {"l": "C", "t": "`height=\"3\"`"}, {"l": "D", "t": "`vspan=\"3\"`"}], "ans": "B", "anst": "`rowspan=\"3\"`"},
+{"n": 397, "t": "What table sectioning tag wraps the footer rows, such as table column totals?", "type": "mc", "opts": [{"l": "A", "t": "`<thead>`"}, {"l": "B", "t": "`<tfoot>`"}, {"l": "C", "t": "`<tbody>`"}, {"l": "D", "t": "`<caption>`"}], "ans": "B", "anst": "`<tfoot>`"},
+{"n": 398, "t": "What essential `<meta>` tag prevents mobile browsers from rendering desktop layouts at tiny scales?", "type": "mc", "opts": [{"l": "A", "t": "`<meta name=\"mobile-first\">`"}, {"l": "B", "t": "`<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">`"}, {"l": "C", "t": "`<meta name=\"screen\" content=\"responsive\">`"}, {"l": "D", "t": "`<meta http-equiv=\"mobile\">`"}], "ans": "B", "anst": "`<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">`"},
+{"n": 399, "t": "Which attribute on the `<img>` tag provides a comma-separated list of images and their intrinsic pixel widths for responsive switching?", "type": "mc", "opts": [{"l": "A", "t": "`src`"}, {"l": "B", "t": "`srcset`"}, {"l": "C", "t": "`sizes`"}, {"l": "D", "t": "`media`"}], "ans": "B", "anst": "`srcset`"},
+{"n": 400, "t": "Which advanced responsive element allows developers to define explicit media rules and formats for art-direction cropping?", "type": "mc", "opts": [{"l": "A", "t": "`<canvas>`"}, {"l": "B", "t": "`<picture>`"}, {"l": "C", "t": "`<svg>`"}, {"l": "D", "t": "`<iframe>`"}], "ans": "B", "anst": "`<picture>`"}
+];
+
+const quizContainer = document.querySelector(".quiz-container");
+const resultContainer = document.querySelector(".quiz-result");
+const timerDisplay = document.querySelector(".quiz-container .timer");
+const questionEl = document.querySelector(".quiz-container .question");
+const optionsEl = document.querySelector(".quiz-container .options");
+const nextBtn = document.getElementById("nextBtn");
+const prevBtn = document.getElementById("prevBtn");
+const fibRow = document.getElementById("fibRow");
+const fibInput = document.getElementById("fibInput");
+const fibSubmit = document.getElementById("fibSubmit");
+
+const MAX_QUESTIONS = QUESTIONS.length;
+const SECONDS_PER_QUESTION = 15;
+const TEST_DURATION = MAX_QUESTIONS * SECONDS_PER_QUESTION;
+
+let active = [];
+let questionNumber = 0;
+let score = 0;
+let timeLeft = 0;
+let timerInterval;
+
+const shuffleArray = arr => {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+};
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+}[c]));
+
+const resetLocalStorage = () => {
+    for (let i = 0; i < MAX_QUESTIONS; i++) {
+        localStorage.removeItem(`userAnswer_${i}`);
+    }
+};
+
+function correctText(q) {
+    if (q.type === "mc") {
+        const o = q.opts.find(x => x.l === q.ans);
+        return o ? o.t : q.anst;
+    }
+    if (q.type === "tf") return q.ans;
+    return q.anst;
+}
+
+function fibMatch(input, ans) {
+    const ni = norm(input);
+    if (!ni) return false;
+    const candidates = [ans, ans.replace(/\([^)]*\)/g, "").trim()];
+    ans.split(/[;,]/).forEach(p => {
+        const t = p.trim().replace(/\([^)]*\)/g, "").trim();
+        if (t) candidates.push(t);
+    });
+    return candidates.some(c => c && norm(c) === ni);
+}
+function norm(s) {
+    return String(s).toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function isCorrect(q, userText) {
+    if (!userText) return false;
+    const t = String(userText).trim();
+    if (q.type === "fib") return fibMatch(t, q.anst);
+    return t === correctText(q);
+}
+
+const formatTime = seconds => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+};
+
+const updateTimerDisplay = () => {
+    timerDisplay.textContent = `Time Left: ${formatTime(timeLeft)}`;
+    timerDisplay.classList.toggle("danger", timeLeft <= 300);
+};
+
+const startTestTimer = () => {
+    clearInterval(timerInterval);
+    timeLeft = TEST_DURATION;
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+            timeLeft = 0;
+            updateTimerDisplay();
+            clearInterval(timerInterval);
+            displayQuizResult();
+            return;
+        }
+        updateTimerDisplay();
+    }, 1000);
+};
+
+function checkAnswer(userAnswer, el) {
+    const q = active[questionNumber];
+    const correct = correctText(q);
+    const ok = isCorrect(q, userAnswer);
+
+    if (ok) {
+        score++;
+        el.classList.add("correct");
+        celebrateAnswer(el);
+    } else {
+        el.classList.add("incorrect");
+    }
+
+    localStorage.setItem(`userAnswer_${questionNumber}`, String(userAnswer).trim());
+
+    const allOptions = document.querySelectorAll(".quiz-container .option");
+    allOptions.forEach(o => o.classList.add("disabled"));
+    fibInput.disabled = true;
+    fibSubmit.disabled = true;
+
+    if (!ok) {
+        allOptions.forEach(o => {
+            if (o.textContent.trim() === correct) o.classList.add("correct");
+        });
+    }
+}
+
+function celebrateAnswer(el) {
+    if (!el || el.tagName === "INPUT") return;
+
+    const badge = document.createElement("span");
+    badge.className = "celebrate";
+    badge.innerHTML = 'AWESOME <span class="cracker-emoji">🎉</span>';
+    el.appendChild(badge);
+
+    const crackers = document.createElement("span");
+    crackers.className = "crackers";
+    crackers.textContent = "🎆 🎇 ✨";
+    el.appendChild(crackers);
+
+    const emojis = ["🎉", "🎊", "🎆", "🎇", "✨", "💥"];
+    for (let i = 0; i < 18; i++) {
+        const c = document.createElement("span");
+        c.className = "confetti";
+        c.textContent = emojis[i % emojis.length];
+        c.style.left = Math.random() * 100 + "vw";
+        c.style.animationDuration = (1.4 + Math.random() * 1.6) + "s";
+        c.style.fontSize = (14 + Math.random() * 18) + "px";
+        c.style.animationDelay = (Math.random() * 0.5) + "s";
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 3500);
+    }
+}
+
+function buildOptions(q, savedUser) {
+    optionsEl.innerHTML = "";
+    fibRow.classList.add("hidden");
+    optionsEl.classList.remove("hidden");
+
+    const correct = correctText(q);
+    const locked = savedUser != null;
+    const qs = q.type === "tf" ? shuffleArray(["True", "False"]) : shuffleArray(q.opts.map(o => o.t));
+
+    qs.forEach(o => {
+        const option = document.createElement("button");
+        option.classList.add("option");
+        option.textContent = o;
+        if (locked) {
+            option.classList.add("disabled");
+            if (o === correct) option.classList.add("correct");
+            if (o === String(savedUser).trim() && o !== correct) option.classList.add("incorrect");
+        } else {
+            option.addEventListener("click", () => checkAnswer(o, option));
+        }
+        optionsEl.appendChild(option);
+    });
+}
+
+function buildFib(q, savedUser) {
+    optionsEl.classList.add("hidden");
+    fibRow.classList.remove("hidden");
+    fibInput.classList.remove("correct", "incorrect");
+    fibInput.value = savedUser != null ? savedUser : "";
+
+    if (savedUser != null) {
+        fibInput.disabled = true;
+        fibSubmit.disabled = true;
+        fibInput.classList.add(isCorrect(q, savedUser) ? "correct" : "incorrect");
+    } else {
+        fibInput.disabled = false;
+        fibSubmit.disabled = false;
+        fibInput.focus();
+    }
+}
+
+function createQuestion() {
+    optionsEl.innerHTML = "";
+    const q = active[questionNumber];
+    const savedUser = localStorage.getItem(`userAnswer_${questionNumber}`);
+    const tq = q.t.replace(/^True\/False:\s*/, "");
+
+    questionEl.textContent = "";
+    const badge = document.createElement("span");
+    badge.className = "question-number";
+    badge.textContent = `${questionNumber + 1}/${MAX_QUESTIONS}`;
+    questionEl.appendChild(badge);
+    questionEl.appendChild(document.createTextNode(" " + tq));
+
+    if (q.type === "fib") {
+        buildFib(q, savedUser);
+    } else {
+        buildOptions(q, savedUser);
+    }
+
+    nextBtn.textContent = questionNumber >= MAX_QUESTIONS - 1 ? "Finish" : "Next";
+    prevBtn.disabled = questionNumber === 0;
+}
+
+fibSubmit.addEventListener("click", () => {
+    if (!fibInput.disabled) {
+        const val = fibInput.value.trim();
+        if (!val) { fibInput.focus(); return; }
+        checkAnswer(val, fibInput);
+        if (isCorrect(active[questionNumber], val)) fibInput.classList.add("correct");
+        else fibInput.classList.add("incorrect");
+    }
+});
+fibInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") fibSubmit.click();
+});
+
+const displayNextQuestion = () => {
+    if (questionNumber >= MAX_QUESTIONS - 1) {
+        displayQuizResult();
+        return;
+    }
+    questionNumber++;
+    createQuestion();
+};
+nextBtn.addEventListener("click", displayNextQuestion);
+
+const displayPrevQuestion = () => {
+    if (questionNumber > 0) {
+        questionNumber--;
+        createQuestion();
+    }
+};
+prevBtn.addEventListener("click", displayPrevQuestion);
+
+const getResultMessage = () => {
+    const pct = score / MAX_QUESTIONS;
+    if (pct === 1) return "Outstanding! Perfect score.";
+    if (pct >= 0.75) return "Very good.";
+    if (pct >= 0.5) return "Good. Keep practising the weak spots.";
+    if (pct >= 0.25) return "Do hard work — revisit the review list below.";
+    return "Better luck next time.";
+};
+
+const displayQuizResult = () => {
+    clearInterval(timerInterval);
+    resultContainer.style.display = "flex";
+    quizContainer.style.display = "none";
+    resultContainer.innerHTML = "";
+
+    const heading = document.createElement("h2");
+    heading.innerHTML = `You have scored ${score} out of ${MAX_QUESTIONS}.`;
+    resultContainer.appendChild(heading);
+
+    const msg = document.createElement("h3");
+    msg.innerHTML = getResultMessage();
+    resultContainer.appendChild(msg);
+
+    const legend = document.createElement("div");
+    legend.className = "result-legend";
+    legend.innerHTML = '<span><span class="dot g"></span> Correct</span><span><span class="dot r"></span> Wrong</span><span><span class="dot w"></span> Not answered</span>';
+    resultContainer.appendChild(legend);
+
+    for (let i = 0; i < MAX_QUESTIONS; i++) {
+        const q = active[i];
+        const userAnswer = localStorage.getItem(`userAnswer_${i}`);
+        const attempted = !!(userAnswer && userAnswer.trim());
+        const ok = isCorrect(q, userAnswer);
+
+        const item = document.createElement("div");
+        item.classList.add("question-container");
+        if (ok) item.classList.add("correct-item");
+        else if (attempted) item.classList.add("incorrect-item");
+
+        const showQ = q.t.replace(/^True\/False:\s*/, "");
+        const userText = attempted ? userAnswer.trim() : "Not answered";
+        const ansClass = ok ? "good" : (attempted ? "bad" : "muted");
+        const ansLine = `<div class="correct-answer">Correct answer: ${esc(correctText(q))}</div>`;
+
+        item.innerHTML = `
+            <div class="question"><span class="qno">Q${q.n}</span>${esc(showQ)}</div>
+            <div class="user-answer ${ansClass}">Your answer: ${esc(userText)}</div>
+            ${ansLine}`;
+
+        resultContainer.appendChild(item);
+    }
+
+    const retakeBtn = document.createElement("button");
+    retakeBtn.classList.add("retake-btn");
+    retakeBtn.innerHTML = "Retake Quiz";
+    retakeBtn.addEventListener("click", retakeQuiz);
+    resultContainer.appendChild(retakeBtn);
+
+    window.scrollTo({ top: 0 });
+};
+
+const retakeQuiz = () => {
+    questionNumber = 0;
+    score = 0;
+    active = shuffleArray(active);
+    resetLocalStorage();
+
+    startTestTimer();
+    createQuestion();
+    resultContainer.style.display = "none";
+    quizContainer.style.display = "block";
+    window.scrollTo({ top: 0 });
+};
+
+active = shuffleArray(QUESTIONS);
+resetLocalStorage();
+startTestTimer();
+createQuestion();
+</script>
+</body>
+</html>
